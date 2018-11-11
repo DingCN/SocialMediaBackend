@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // global variables for storing user data goes here, will be replaced with database later
@@ -13,6 +14,14 @@ var username_password map[string]string
 // Alice is following Bob and Cain
 // hope this definition is correct
 var followingList map[string][]string
+
+//Alice: [[Post1, timestamp], [Post2, timestamp]]
+var Posts map[string][]TimedPost
+
+type TimedPost struct {
+	Post      string
+	timestamp time.Time
+}
 
 type Web struct {
 	srv *http.Server
@@ -38,7 +47,7 @@ func (w *Web) Shutdown(ctx context.Context) error {
 }
 
 //Business Logic
-func login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	//use POST method in front end
 	r.ParseForm()
 	// logic part of log in
@@ -84,10 +93,21 @@ func GetFollowingStatus(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TODO create post
+// TODO Post request create post
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	// store in a dict, user:[post1, post2, post3]
 	// remember to append timestamp
+	r.ParseForm()
+	username := r.Form["username"][0] //TODO is username parsed in a form?
+	post := r.Form["post"][0]
+	if post == "" {
+		//TODO return failed
+	}
+	timedPost := TimedPost{post, time.Now()}
+
+	Posts[username] = append(Posts[username], timedPost)
+	//TODO return success
+
 }
 
 // TODO view feeds
