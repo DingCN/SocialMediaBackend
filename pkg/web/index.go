@@ -1,11 +1,14 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 )
 
 func index(w http.ResponseWriter, req *http.Request) {
-	_, err := w.Write([]byte("Hello welcome to my website"))
+	cookie, _ := req.Cookie("username")
+	fmt.Fprint(w, cookie)
+	_, err := w.Write([]byte("UnLoggedInPage"))
 	if err != nil {
 		panic(err)
 	}
