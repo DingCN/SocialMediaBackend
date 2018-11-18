@@ -125,3 +125,9 @@ type UserTmpl struct {
 	numFollowers int
 	tweetList    []Tweet
 }
+
+type UserListTmpl struct {
+	listType string
+	username string
+	userlist map[string]bool
+}

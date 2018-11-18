@@ -14,7 +14,16 @@
     <div>
         <div class="timeline">
             <h3>> Trending  </h3>
+            {{range $t := .}}
             <div class="tweet">
+                <p>
+                    <a href="/ViewFeeds?username={{$t.UserName}}">@{{$t.UserName}}</a> 
+                    * {{$t.TimeStamp}}
+                </p>
+                <p>{{$t.Body}}</p>
+            </div>
+            {{end}}
+            <!-- <div class="tweet">
                 <p>
                     <a href="/ViewFeeds?username=#">@User1</a> 
                     *12:12
@@ -27,7 +36,7 @@
                     *13:13
                 </p>
                 <p>Text</p>
-            </div>
+            </div> -->
         </div>
     </div>
     

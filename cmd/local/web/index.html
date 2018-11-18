@@ -19,8 +19,8 @@
             <form action="/login" method="POST">
             <div>
                 <h3>> Already have an account?</h3>
-                {{if $loginResult != ""}}
-                    <p>{{$loginResult}}</p>
+                {{if . != ""}}
+                    <p>{{.}}</p>
                 {{end}}
                 <div>
                     <input name="username" maxlength="50" placeholder="Name" type="text"/>

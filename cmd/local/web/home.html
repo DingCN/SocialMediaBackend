@@ -18,9 +18,18 @@
                 <!-- @HongyuDing -->
             </h2>
             <p>
-                Tweets: {{.numTweets}}
-                Following: {{.numFollowing}}
-                Followers: {{.numFollowers}}
+                Tweets: 
+                <a href="/userProfile?username={{.username}}">
+                {{.numTweets}}
+                </a>
+                Following: 
+                <a href="/getAllFollowing?username={{.username}}">
+                {{.numFollowing}}
+                </a>
+                Followers: 
+                <a href="/getAllFollower?username={{.username}}">
+                {{.numFollowers}}
+                </a>
                 <!-- Tweets: 12
                 Following: 12
                 Followers: 12 -->

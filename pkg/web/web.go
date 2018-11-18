@@ -48,7 +48,10 @@ func (w *Web) Shutdown(ctx context.Context) error {
 
 // Index .
 func Index(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("index.html")
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		panic(err)
+	}
 	t.Execute(w, nil)
 }
 
@@ -83,7 +86,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	} else if r.PostFormValue("signup") != "" {
 		CreateAccount(w, r)
 	}
-
 }
 
 // Home .
@@ -125,21 +127,26 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("password:", password)
 		if len(password) < 1 {
 			json.NewEncoder(w).Encode("password length less than 1")
-			return
+			t, _ := template.ParseFiles("index.html")
+			signUpResult := "password length less than 1"
+			t, err := template.ParseFiles("index.html")
+			if err != nil {
+				panic(err)
+			}
+			t.Execute(w, signUpResult)
 		}
 		_, ok := UserList.Users[username]
 		if ok == false { // record not found, creating account...
 			OPAddUser(username, password)
 			json.NewEncoder(w).Encode("create account success")
-
 			newURL := fmt.Sprintf("/home?username=%s", username)
 			http.Redirect(w, r, newURL, 302)
 
 		} else {
 			t, _ := template.ParseFiles("index.html")
-			loginResult := "user already exists"
+			signUpResult := "user already exists"
 			json.NewEncoder(w).Encode("user already exists")
-			t.Execute(w, loginResult)
+			t.Execute(w, signUpResult)
 			return
 		}
 	}
@@ -176,7 +183,17 @@ func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 	followings := UserList.Users[username].FollowingList
 	//TODO render
 	json.NewEncoder(w).Encode(followings)
-	return
+	t, err := template.ParseFiles("userlist.html")
+	if err != nil {
+		panic(err)
+	}
+	newFollowingTmpl := UserListTmpl{
+		listType: "following",
+		username: username,
+		userlist: followings,
+	}
+	json.NewEncoder(w).Encode(followings)
+	t.Execute(w, newFollowingTmpl)
 
 	// returnList := ""
 	// for user, isFollowing := range followings {
@@ -203,7 +220,17 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 
 	followers := UserList.Users[username].FollowerList
 	//TODO render
+	t, err := template.ParseFiles("userlist.html")
+	if err != nil {
+		panic(err)
+	}
+	newFollowerTmpl := UserListTmpl{
+		listType: "follower",
+		username: username,
+		userlist: followers,
+	}
 	json.NewEncoder(w).Encode(followers)
+	t.Execute(w, newFollowerTmpl)
 	return
 
 }
@@ -250,6 +277,9 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 		OPAddTweet(username, post)
 		json.NewEncoder(w).Encode("create post success")
+
+		newURL := fmt.Sprintf("/home?username=%s", username)
+		http.Redirect(w, r, newURL, 302)
 		return
 	}
 }
@@ -281,5 +311,6 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 func MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 	tweets := OPGetRandomTweet()
 	json.NewEncoder(w).Encode(tweets)
-	return
+	t, _ := template.ParseFiles("moments.html")
+	t.Execute(w, tweets)
 }

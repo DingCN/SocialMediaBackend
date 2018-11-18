@@ -19,15 +19,15 @@
             </h2>
             <p> 
                 Tweets: 
-                <a href="/userProfile?username=#">
+                <a href="/userProfile?username={{.username}}">
                 {{.numTweets}}
                 </a>
                 Following: 
-                <a href="/getAllFollowing?username=#">
+                <a href="/getAllFollowing?username={{.username}}">
                 {{.numFollowing}}
                 </a>
                 Followers: 
-                <a href="/getAllFollower?username=#">
+                <a href="/getAllFollower?username={{.username}}">
                 {{.numFollowers}}
                 </a>
             </p>
