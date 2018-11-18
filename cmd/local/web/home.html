@@ -1,0 +1,66 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Twitter: User's Home Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+</head>
+<body>
+    <div class="header">
+        <a href="/home">Home</a>
+        <a href="/i/moments">Moments</a>
+    </div>
+    <div>
+        <div class="user">
+            <h2>
+                @{{.username}}
+                <!-- @HongyuDing -->
+            </h2>
+            <p>
+                Tweets: 
+                <a href="/userProfile?username={{.username}}">
+                {{.numTweets}}
+                </a>
+                Following: 
+                <a href="/getAllFollowing?username={{.username}}">
+                {{.numFollowing}}
+                </a>
+                Followers: 
+                <a href="/getAllFollower?username={{.username}}">
+                {{.numFollowers}}
+                </a>
+                <!-- Tweets: 12
+                Following: 12
+                Followers: 12 -->
+            </p>                                
+        </div>
+        <div class="create_post">
+            <form action="/createPost" method="POST">
+            <div>
+                <h3>>What's in your mind?</h3>
+                <div>
+                    <textarea name="body" id="1" cols="50" rows="5"></textarea>
+                </div>
+                <div>
+                    <input type="submit" name="tweet" value="Tweet!"/>
+                    <input type="reset" name="reset" value="Reset" />
+                </div>
+            </div>
+            </form>
+        </div>
+        <div class="timeline">
+            <h3>> From Your Following </h3>
+            {{range $t := .tweetList}}
+            <div class="tweet">
+                <p>
+                    <a href="/ViewFeeds?username={{$t.UserName}}">@{{$t.UserName}}</a> 
+                    * {{$t.TimeStamp}}
+                </p>
+                <p>{{$t.Body}}</p>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>

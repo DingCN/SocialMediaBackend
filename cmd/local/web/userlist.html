@@ -1,0 +1,22 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Twitter: userlist</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+</head>
+<body>
+    {{if .listType == "following"}}
+        <h3>Users followed by {{.username}}</h3>
+    {{else}}
+        <h3>Users following {{.username}}</h3>
+    {{end}}
+    {{range k, _:= .userlist}}
+    <div class="user_list">
+        <a href="/userprofile?username={{u}}">
+        @{{k}}
+        </a>
+    </div>
+    {{end}}
+</body>

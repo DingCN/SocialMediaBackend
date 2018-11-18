@@ -115,3 +115,19 @@ func (p timeSlice) Swap(i, j int) {
 // 	}
 // 	return tweetListTmp
 // }
+
+// Render Template Helpers
+// func renderTemplate(w http.ResponseWriter, tmplname string, te)
+type UserTmpl struct {
+	username     string
+	numTweets    int
+	numFollowing int
+	numFollowers int
+	tweetList    []Tweet
+}
+
+type UserListTmpl struct {
+	listType string
+	username string
+	userlist map[string]bool
+}
