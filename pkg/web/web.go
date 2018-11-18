@@ -37,7 +37,7 @@ func (w *Web) Start() error {
 	http.HandleFunc("/i/moments", MomentRandomFeeds)
 	//http.HandleFunc("/ListUser", ListUser)
 
-	err := http.ListenAndServe(":9090", nil) // set listen port
+	err := http.ListenAndServe(":8080", nil) // set listen port
 	return err
 }
 
