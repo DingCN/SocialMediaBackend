@@ -150,12 +150,12 @@ func FollowOrUnfollow(w http.ResponseWriter, r *http.Request) {
 
 func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	cookie, _ := r.Cookie("username")
-	if cookie == nil {
-		json.NewEncoder(w).Encode("login first to get following list")
+	usernames, ok := r.URL.Query()["username"]
+	if !ok || len(usernames[0]) < 1 {
+		json.NewEncoder(w).Encode("url parameter incorrect")
 		return
 	}
-	username := cookie.Value
+	username := usernames[0]
 
 	followings := UserList.Users[username].FollowingList
 	//TODO render

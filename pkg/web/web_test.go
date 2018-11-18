@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 )
 
-var addr = "//127.0.0.1:9090"
+var addr = "//127.0.0.1:8080"
 
 func Test_CreateAccount(t *testing.T) {
 	var expected = "create account success"
@@ -70,6 +71,31 @@ func Test_CreatePost(t *testing.T) {
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
 	}
+}
+
+func Test_Follow(t *testing.T) {
+	ForTestCreateAccount(t, "Test_FollowAlice", "Test_FollowAlice")
+	ForTestCreateAccount(t, "Test_FollowBob", "Test_FollowBob")
+	ForTestFollow(t, "Test_FollowAlice", "Test_FollowBob")
+
+	// test following list of Alice
+	actual := ForTestFollowingList(t, "Test_FollowAlice")
+	var expected = map[string]bool{}
+	expected["Test_FollowBob"] = true
+	eq := reflect.DeepEqual(actual, expected)
+	if !eq {
+		t.Fatalf("FollowingList incorrect")
+	}
+
+	// test follower list of Bob
+	actual = ForTestFollowerList(t, "Test_FollowBob")
+	expected = map[string]bool{}
+	expected["Test_FollowBob"] = true
+	eq := reflect.DeepEqual(actual, expected)
+	if !eq {
+		t.Fatalf("FollowerList incorrect")
+	}
+
 }
 
 func ForTestCreateAccount(t *testing.T, username string, password string) string {
@@ -148,6 +174,71 @@ func ForTestCreatePost(t *testing.T, username string, post string) string {
 		return ""
 	}
 
+	return actual
+}
+
+func ForTestFollow(t *testing.T, username string, targetname string) {
+	var path = "/i/moments.html"
+	var urlparameter = "?username=" + targetname
+	form := url.Values{}
+	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.PostForm = form
+	expiration := time.Now().Add(30 * time.Minute)
+	cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
+	req.AddCookie(&cookie)
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(FollowOrUnfollow)
+	handler.ServeHTTP(res, req)
+	//CreateAccount(res, req)
+
+	return
+}
+
+func ForTestFollowingList(t *testing.T, username string) map[string]bool {
+	var path = "getAllFollowing.html"
+	var urlparameter = "?username=" + username
+	form := url.Values{}
+	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(GetAllFollowing)
+	handler.ServeHTTP(res, req)
+
+	var actual = map[string]bool{}
+	err = json.NewDecoder(res.Body).Decode(&actual)
+	if err != nil {
+		http.Error(res, err.Error(), 400)
+		t.Fatalf("HTTP error")
+		return nil
+	}
+	return actual
+}
+func ForTestFollowerList(t *testing.T, username string) map[string]bool {
+	var path = "getAllFollower.html"
+	var urlparameter = "?username=" + username
+	form := url.Values{}
+	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(GetAllFollower)
+	handler.ServeHTTP(res, req)
+
+	var actual = map[string]bool{}
+	err = json.NewDecoder(res.Body).Decode(&actual)
+	if err != nil {
+		http.Error(res, err.Error(), 400)
+		t.Fatalf("HTTP error")
+		return nil
+	}
 	return actual
 }
 

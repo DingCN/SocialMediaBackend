@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"sort"
 	"time"
 )
@@ -8,7 +9,7 @@ import (
 func OPAddUser(username string, password string) bool {
 	UserList.mutex.Lock()
 	defer UserList.mutex.Unlock()
-	UserList.Users[username] = &User{UserName: username, Password: password}
+	UserList.Users[username] = &User{UserName: username, Password: password, FollowingList: map[string]bool{}, FollowerList: map[string]bool{}}
 	return true
 }
 
@@ -78,14 +79,19 @@ func OPGetAllFollowing(username string) []string {
 func OPFollowUnFollow(username string, targetname string) bool {
 	res, ok := UserList.Users[username].FollowingList[targetname]
 	if ok == true && res == true {
-		//already following, set UnFollow
-		UserList.Users[username].FollowingList[targetname] = false
-		UserList.Users[targetname].FollowerList[username] = false
+		//already following, set UnFollow by deleting it instead
+		delete(UserList.Users[username].FollowingList, targetname)
+		delete(UserList.Users[targetname].FollowerList, username)
 
+		// UserList.Users[username].FollowingList[targetname] = false
+		// UserList.Users[targetname].FollowerList[username] = false
+		fmt.Printf("%s just unfollowed %s\n", username, targetname)
 	} else {
 		//set Follow
 		UserList.Users[username].FollowingList[targetname] = true
 		UserList.Users[targetname].FollowerList[username] = true
+		fmt.Printf("%s just followed %s\n", username, targetname)
+
 	}
 	return true
 }
