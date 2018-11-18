@@ -7,7 +7,8 @@ import (
 
 func main() {
 	cfg := &web.Config{
-		Addr: os.Getenv("HOST"),
+		Addr:        os.Getenv("HOST"),
+		MaxFeedsNum: 3,
 	}
 
 	webSrv, err := web.New(cfg)

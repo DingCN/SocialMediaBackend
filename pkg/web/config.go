@@ -1,5 +1,6 @@
 package web
 
 type Config struct {
-	Addr string
+	Addr        string
+	MaxFeedsNum int
 }
