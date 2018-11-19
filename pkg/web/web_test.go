@@ -1,7 +1,9 @@
 package web
 
 import (
-	
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
@@ -196,6 +198,7 @@ func ForTestCreateAccount(t *testing.T, username string, password string) string
 	var actual string
 	err = json.NewDecoder(res.Body).Decode(&actual)
 	if err != nil {
+		panic(err)
 		http.Error(res, err.Error(), 400)
 		t.Fatalf("HTTP error")
 		return ""
@@ -223,6 +226,7 @@ func ForTestLogin(t *testing.T, username string, password string) string {
 	var actual string
 	err = json.NewDecoder(res.Body).Decode(&actual)
 	if err != nil {
+		panic(err)
 		http.Error(res, err.Error(), 400)
 		t.Fatalf("HTTP error")
 		return ""
@@ -234,7 +238,7 @@ func ForTestLogin(t *testing.T, username string, password string) string {
 func ForTestCreatePost(t *testing.T, username string, post string) string {
 	var path = "/createPost"
 	form := url.Values{}
-	form.Add("Post", post)
+	form.Add("body", post)
 	//resp, err = http.PostForm(addr+path, form)
 	req, err := http.NewRequest("POST", addr+path, strings.NewReader(form.Encode()))
 	if err != nil {
@@ -384,6 +388,7 @@ func ForTestMoments(t *testing.T) []Tweet {
 	var actual []Tweet
 	err = json.NewDecoder(res.Body).Decode(&actual)
 	if err != nil {
+		panic(err)
 		http.Error(res, err.Error(), 400)
 		t.Fatalf("HTTP error")
 		return nil

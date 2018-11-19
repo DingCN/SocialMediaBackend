@@ -49,7 +49,7 @@ func (w *Web) Shutdown(ctx context.Context) error {
 
 // Index .
 func Index(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("index.html")
+	t, err := template.ParseFiles("frontend/index.html")
 	if err != nil {
 		panic(err)
 	}
@@ -59,9 +59,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // Login .
 func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	t, _ := template.ParseFiles("index.html")
+	t, _ := template.ParseFiles("frontend/index.html")
 
-	// loginResult := ""
+	loginResult := ""
 	// logic part of log in
 	username := r.PostFormValue("username")
 	password := r.PostFormValue("password")
@@ -85,11 +85,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
 			http.SetCookie(w, &cookie)
 			http.Redirect(w, r, "/home", 302)
-    //Test
-      json.NewEncoder(w).Encode("login success")
+			//Test
+			json.NewEncoder(w).Encode("login success")
 		}
 	} else if r.PostFormValue("signup") != "" {
-		  CreateAccount(w, r)
+		CreateAccount(w, r)
 	}
 }
 
@@ -109,7 +109,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	unsortedTweets := OPGetFollowingTweets(pUser.UserName)
-	fmt.Printf("Following post for user: %s found: ", usernames[0])
+	fmt.Printf("Following post for user: %s found: ", username)
 	for _, tweet := range unsortedTweets {
 		fmt.Printf("%s; ", tweet.Body)
 	}
@@ -126,8 +126,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-  // log
-	fmt.Printf("Following post for user: %s found: ", usernames[0])
+	// log
+	fmt.Printf("Following post for user: %s found: ", username)
 	for _, tweet := range sortedTweets {
 		fmt.Printf("%s; ", tweet.Body)
 	}
@@ -145,8 +145,8 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 
 	if len(password) < 1 {
 
-		t, _ := template.ParseFiles("index.html")
-		t, err := template.ParseFiles("index.html")
+		t, _ := template.ParseFiles("frontend/index.html")
+		t, err := template.ParseFiles("frontend/index.html")
 		if err != nil {
 			panic(err)
 		}
@@ -166,7 +166,7 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode("create account success")
 
 	} else {
-		t, err := template.ParseFiles("index.html")
+		t, err := template.ParseFiles("frontend/index.html")
 		if err != nil {
 			panic(err)
 		}
@@ -250,7 +250,7 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.Execute(w, newFollowerTmpl)
-  //Test
+	//Test
 	json.NewEncoder(w).Encode(followers)
 	return
 
@@ -332,14 +332,17 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 		TweetList:    pUser.TweetList,
 	}
 	h.Execute(w, userProfile)
-  //Test
+	//Test
 	tweets := OPGetTweetByUsername(username)
 	json.NewEncoder(w).Encode(tweets)
 }
 
 func MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 	tweets := OPGetRandomTweet()
-	t, _ := template.ParseFiles("moments.html")
+	t, err := template.ParseFiles("frontend/moments.html")
+	if err != nil {
+		panic(err)
+	}
 	t.Execute(w, tweets)
 	json.NewEncoder(w).Encode(tweets)
 }
