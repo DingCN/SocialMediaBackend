@@ -36,6 +36,7 @@ func (w *Web) Start() error {
 	http.HandleFunc("/createPost", CreatePost)
 	http.HandleFunc("/userProfile", UserProfile) //tweet for a single user
 	http.HandleFunc("/i/moments", MomentRandomFeeds)
+	http.HandleFunc("/FollowUnfollow", FollowOrUnfollow)
 	//http.HandleFunc("/ListUser", ListUser)
 
 	err := http.ListenAndServe(":8080", nil) // set listen port
