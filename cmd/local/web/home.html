@@ -8,31 +8,27 @@
 </head>
 <body>
     <div class="header">
-        <a href="/home">Home</a>
+        <a href="/home?username={{.UserName}}">Home</a>
         <a href="/i/moments">Moments</a>
     </div>
     <div>
         <div class="user">
             <h2>
-                @{{.username}}
-                <!-- @HongyuDing -->
+                {{.UserName}}'s Home Page
             </h2>
             <p>
                 Tweets: 
-                <a href="/userProfile?username={{.username}}">
-                {{.numTweets}}
+                <a href="/userProfile?username={{.UserName}}">
+                {{.NumTweets}}
                 </a>
                 Following: 
-                <a href="/getAllFollowing?username={{.username}}">
-                {{.numFollowing}}
+                <a href="/getAllFollowing?username={{.UserName}}">
+                {{.NumFollowing}}
                 </a>
                 Followers: 
-                <a href="/getAllFollower?username={{.username}}">
-                {{.numFollowers}}
+                <a href="/getAllFollower?username={{.UserName}}">
+                {{.NumFollowers}}
                 </a>
-                <!-- Tweets: 12
-                Following: 12
-                Followers: 12 -->
             </p>                                
         </div>
         <div class="create_post">
@@ -40,7 +36,7 @@
             <div>
                 <h3>>What's in your mind?</h3>
                 <div>
-                    <textarea name="body" id="1" cols="50" rows="5"></textarea>
+                    <textarea name="body" id="1" cols="50" rows="5" minlength="1"></textarea>
                 </div>
                 <div>
                     <input type="submit" name="tweet" value="Tweet!"/>
@@ -51,7 +47,7 @@
         </div>
         <div class="timeline">
             <h3>> From Your Following </h3>
-            {{range $t := .tweetList}}
+            {{range $t := .TweetList}}
             <div class="tweet">
                 <p>
                     <a href="/ViewFeeds?username={{$t.UserName}}">@{{$t.UserName}}</a> 
