@@ -90,13 +90,59 @@ func Test_Follow(t *testing.T) {
 	// test follower list of Bob
 	actual = ForTestFollowerList(t, "Test_FollowBob")
 	expected = map[string]bool{}
-	expected["Test_FollowBob"] = true
-	eq := reflect.DeepEqual(actual, expected)
+	expected["Test_FollowAlice"] = true
+	eq = reflect.DeepEqual(actual, expected)
 	if !eq {
 		t.Fatalf("FollowerList incorrect")
 	}
 
 }
+
+//Test for view feeds
+func Test_Home(t *testing.T) {
+	ForTestCreateAccount(t, "Test_HomeAlice", "Test_HomeAlice")
+	ForTestCreateAccount(t, "Test_HomeBob", "Test_HomeBob")
+	ForTestFollow(t, "Test_HomeAlice", "Test_HomeBob")
+	// Alice is following Bob
+	ForTestCreatePost(t, "Test_HomeBob", "Test_HomeBob's post")
+	actual := ForTestHome(t, "Test_HomeAlice")
+	// unable to test TimeStamp since it's set on server side
+	if actual[0].UserName != "Test_HomeBob" || actual[0].Body != "Test_HomeBob's post" {
+		t.Fatalf("Home(ViewFeeds) incorrect")
+	}
+}
+func Test_UserProfile(t *testing.T) {
+	ForTestCreateAccount(t, "Test_UserProfileAlice", "Test_UserProfileAlice")
+	ForTestCreateAccount(t, "Test_UserProfileBob", "Test_UserProfileBob")
+	// Alice is following Bob
+	ForTestCreatePost(t, "Test_UserProfileBob", "Test_UserProfileBob's post")
+	actual := ForTestUserProfile(t, "Test_UserProfileBob")
+	// unable to test TimeStamp since it's set on server side
+	if actual[0].UserName != "Test_UserProfileBob" || actual[0].Body != "Test_UserProfileBob's post" {
+		t.Fatalf("UserProfile incorrect")
+	}
+}
+
+func Test_Moments(t *testing.T) {
+	ForTestCreateAccount(t, "Test_MomentsAlice", "Test_MomentsAlice")
+	ForTestCreateAccount(t, "Test_MomentsBob", "Test_MomentsBob")
+	// Alice is following Bob
+	ForTestCreatePost(t, "Test_MomentsBob", "Test_MomentsBob's post")
+	actual := ForTestMoments(t)
+	// unable to test TimeStamp since it's set on server side
+	if actual[0].UserName != "Test_MomentsBob" || actual[0].Body != "Test_MomentsBob's post" {
+		t.Fatalf("Moments incorrect")
+	}
+}
+
+// func Test_UserProfile(t *testing.T) {
+// 	ForTestCreateAccount(t, "Test_UserProfileAlice", "Test_UserProfileAlice")
+// 	ForTestCreateAccount(t, "Test_UserProfileBob", "Test_UserProfileBob")
+// 	ForTestFollow(t, "Test_UserProfileAlice", "Test_UserProfileBob")
+// 	// Alice is following Bob
+// 	ForTestCreatePost(t, "Test_UserProfileBob", "Test_UserProfileBob's post")
+// 	ForTestUserProfile(t, "Test_UserProfileAlice")
+// }
 
 func ForTestCreateAccount(t *testing.T, username string, password string) string {
 	var path = "/createAccount.html"
@@ -219,6 +265,7 @@ func ForTestFollowingList(t *testing.T, username string) map[string]bool {
 	}
 	return actual
 }
+
 func ForTestFollowerList(t *testing.T, username string) map[string]bool {
 	var path = "getAllFollower.html"
 	var urlparameter = "?username=" + username
@@ -241,6 +288,97 @@ func ForTestFollowerList(t *testing.T, username string) map[string]bool {
 	}
 	return actual
 }
+
+func ForTestHome(t *testing.T, username string) []Tweet {
+	var path = "home.html"
+	var urlparameter = "?username=" + username
+	form := url.Values{}
+	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(Home)
+	handler.ServeHTTP(res, req)
+
+	var actual []Tweet
+	err = json.NewDecoder(res.Body).Decode(&actual)
+	if err != nil {
+		http.Error(res, err.Error(), 400)
+		t.Fatalf("HTTP error")
+		return nil
+	}
+	return actual
+}
+
+func ForTestUserProfile(t *testing.T, username string) []Tweet {
+	var path = "userProfile.html"
+	var urlparameter = "?username=" + username
+	form := url.Values{}
+	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(UserProfile)
+	handler.ServeHTTP(res, req)
+
+	var actual []Tweet
+	err = json.NewDecoder(res.Body).Decode(&actual)
+	if err != nil {
+		http.Error(res, err.Error(), 400)
+		t.Fatalf("HTTP error")
+		return nil
+	}
+	return actual
+}
+
+func ForTestMoments(t *testing.T) []Tweet {
+	var path = "i/moments.html"
+	form := url.Values{}
+	req, err := http.NewRequest("POST", addr+path, strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+	handler := http.HandlerFunc(MomentRandomFeeds)
+	handler.ServeHTTP(res, req)
+
+	var actual []Tweet
+	err = json.NewDecoder(res.Body).Decode(&actual)
+	if err != nil {
+		http.Error(res, err.Error(), 400)
+		t.Fatalf("HTTP error")
+		return nil
+	}
+	return actual
+}
+
+// func ForTestUserProfile(t *testing.T, username string) {
+// 	var path = "userProfile.html"
+// 	var urlparameter = "?username=" + username
+// 	form := url.Values{}
+// 	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	res := httptest.NewRecorder()
+// 	handler := http.HandlerFunc(GetAllFollower)
+// 	handler.ServeHTTP(res, req)
+
+// 	var actual = map[string]bool{}
+// 	err = json.NewDecoder(res.Body).Decode(&actual)
+// 	if err != nil {
+// 		http.Error(res, err.Error(), 400)
+// 		t.Fatalf("HTTP error")
+// 		return nil
+// 	}
+// 	return actual
+// }
 
 /////// Original version
 // func Test_Login(t *testing.T) {

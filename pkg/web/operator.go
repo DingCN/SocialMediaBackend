@@ -26,6 +26,7 @@ func OPAddTweet(username string, post string) bool {
 	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
 	CentralTweetList.Tweets = append(CentralTweetList.Tweets, &tweet)
 	UserList.Users[username].TweetList = append(UserList.Users[username].TweetList, tweet)
+	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
 	//sort
 
 	return true
@@ -52,14 +53,17 @@ func OPGetFollowingTweets(username string) []Tweet {
 	for _, username := range followings {
 		res = append(res, UserList.Users[username].TweetList...) // ... lets you pass multiple arguments to a variadic function from a slice
 	}
+	// log
+
 	return res
 }
 
 func OPSortTweets(tweets []Tweet) []Tweet {
 	res := make(timeSlice, 0, len(tweets))
-	for _, d := range res {
+	for _, d := range tweets {
 		res = append(res, d)
 	}
+
 	sort.Sort(res)
 	return res
 }
@@ -67,9 +71,10 @@ func OPSortTweets(tweets []Tweet) []Tweet {
 func OPGetAllFollowing(username string) []string {
 	followings := UserList.Users[username].FollowingList
 	returnList := []string{}
-	for username, isFollowing := range followings {
+	for followingname, isFollowing := range followings {
 		if isFollowing == true {
-			returnList = append(returnList, username)
+			returnList = append(returnList, followingname)
+			fmt.Printf("user:%s 's following found: %s\n", username, followingname)
 
 		}
 	}
