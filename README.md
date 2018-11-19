@@ -1,7 +1,7 @@
 ## Use
 Test file is at pkg/web/web_test.go (all test cleared)
   
-Run server by executing cmd/local/web/web.go
+Run server by executing cmd/local/web/web.go, the server runs at localhost:8080
   
 There are still some bug on frontend in this release, we are still working on it.
 
