@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -35,6 +36,7 @@ func (w *Web) Start() error {
 	http.HandleFunc("/createPost", CreatePost)
 	http.HandleFunc("/userProfile", UserProfile)
 	http.HandleFunc("/i/moments", MomentRandomFeeds)
+	http.HandleFunc("/FollowOrUnfollow", FollowOrUnfollow)
 	//http.HandleFunc("/ListUser", ListUser)
 
 	err := http.ListenAndServe(":8080", nil) // set listen port
@@ -125,32 +127,37 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 	password := r.PostFormValue("password")
 	fmt.Println("username:", username)
 	fmt.Println("password:", password)
+	//var signUpResult string
+
 	if len(password) < 1 {
-		//json.NewEncoder(w).Encode("password length less than 1")
+
 		t, _ := template.ParseFiles("index.html")
-		signUpResult := "password length less than 1"
 		t, err := template.ParseFiles("index.html")
 		if err != nil {
 			panic(err)
 		}
-		t.Execute(w, signUpResult)
+		t.Execute(w, "password length less than 1")
+		json.NewEncoder(w).Encode("password length less than 1")
 	}
 	_, ok := UserList.Users[username]
 	if ok == false { // record not found, creating account...
 		OPAddUser(username, password)
-		//json.NewEncoder(w).Encode("create account success")
+
 		// redirect to login
 		// TODO: redirect to Login to save repeating code
 		expiration := time.Now().Add(30 * time.Minute)
 		cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
 		http.SetCookie(w, &cookie)
 		http.Redirect(w, r, "/home", 302)
+		json.NewEncoder(w).Encode("create account success")
 
 	} else {
-		t, _ := template.ParseFiles("index.html")
-		signUpResult := "user already exists"
-		//json.NewEncoder(w).Encode("user already exists")
-		t.Execute(w, signUpResult)
+		t, err := template.ParseFiles("index.html")
+		if err != nil {
+			panic(err)
+		}
+		t.Execute(w, "user already exists")
+		json.NewEncoder(w).Encode("user already exists")
 		return
 	}
 }
@@ -286,10 +293,10 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		OPAddTweet(username, post)
-		//json.NewEncoder(w).Encode("create post success")
 
 		newURL := fmt.Sprintf("/home?username=%s", username)
 		http.Redirect(w, r, newURL, 302)
+		json.NewEncoder(w).Encode("create post success")
 		return
 	}
 }

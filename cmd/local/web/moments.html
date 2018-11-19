@@ -17,26 +17,12 @@
             {{range $t := .}}
             <div class="tweet">
                 <p>
-                    <a href="/ViewFeeds?username={{$t.UserName}}">@{{$t.UserName}}</a> 
+                    <a href="/userProfile?username={{$t.UserName}}">@{{$t.UserName}}</a> 
                     * {{$t.Timestamp}}
                 </p>
                 <p>{{$t.Body}}</p>
             </div>
             {{end}}
-            <!-- <div class="tweet">
-                <p>
-                    <a href="/ViewFeeds?username=#">@User1</a> 
-                    *12:12
-                </p>
-                <p>Text</p>
-            </div>
-            <div class="tweet">
-                <p>
-                    <a href="/ViewFeeds?username=#">@User2</a>
-                    *13:13
-                </p>
-                <p>Text</p>
-            </div> -->
         </div>
     </div>
     
