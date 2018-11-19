@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -72,16 +71,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("password:", password)
 		pUser, ok := UserList.Users[username]
 		if ok == false { // not found
-			json.NewEncoder(w).Encode("username or passwd incorrect")
+			//json.NewEncoder(w).Encode("username or passwd incorrect")
 			loginResult = "User not found. Please try again."
 			t.Execute(w, loginResult)
 		} else if password != pUser.Password {
-			json.NewEncoder(w).Encode("username or passwd incorrect")
+			//json.NewEncoder(w).Encode("username or passwd incorrect")
 			loginResult := "Incorrect password. Please try again."
 			t.Execute(w, loginResult)
 		} else { // login success, redirect to home
-			newURL := fmt.Sprintf("/home?username=%s", username)
-			http.Redirect(w, r, newURL, 302)
+			expiration := time.Now().Add(30 * time.Minute)
+			cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
+			http.SetCookie(w, &cookie)
+			http.Redirect(w, r, "/home", 302)
 		}
 	} else if r.PostFormValue("signup") != "" {
 		CreateAccount(w, r)
@@ -90,65 +91,67 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 // Home .
 func Home(w http.ResponseWriter, r *http.Request) {
-	usernames, ok := r.URL.Query()["username"]
-	if !ok {
-		return
-	}
-
-	expiration := time.Now().Add(30 * time.Minute)
-	cookie := http.Cookie{Name: "username", Value: usernames[0], Expires: expiration}
-	http.SetCookie(w, &cookie)
-	json.NewEncoder(w).Encode("login success")
+	// usernames, ok := r.URL.Query()["username"]
+	cookie, _ := r.Cookie("username")
+	username := cookie.Value
 
 	// Render
-	pUser, ok := UserList.Users[usernames[0]]
-	h, _ := template.ParseFiles("home.html")
+	pUser, ok := UserList.Users[username]
+	if !ok {
+		log.Println("login first to get follower list")
+	}
+	h, err := template.ParseFiles("home.html")
+	if err != nil {
+		panic(err)
+	}
 	unsortedTweets := OPGetFollowingTweets(pUser.UserName)
 	sortedTweets := OPSortTweets(unsortedTweets)
 	userHome := UserTmpl{
-		username:     usernames[0],
-		numTweets:    len(pUser.TweetList),
-		numFollowing: len(pUser.FollowingList),
-		numFollowers: len(pUser.FollowerList),
-		tweetList:    sortedTweets,
+		UserName:     username,
+		NumTweets:    len(pUser.TweetList),
+		NumFollowing: len(pUser.FollowingList),
+		NumFollowers: len(pUser.FollowerList),
+		TweetList:    sortedTweets,
 	}
-	h.Execute(w, userHome)
+	err = h.Execute(w, userHome)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func CreateAccount(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		t, _ := template.ParseFiles("createAccount.html")
-		t.Execute(w, nil)
-	} else {
-		r.ParseForm()
-		username := r.PostFormValue("username")
-		password := r.PostFormValue("password")
-		fmt.Println("username:", username)
-		fmt.Println("password:", password)
-		if len(password) < 1 {
-			json.NewEncoder(w).Encode("password length less than 1")
-			t, _ := template.ParseFiles("index.html")
-			signUpResult := "password length less than 1"
-			t, err := template.ParseFiles("index.html")
-			if err != nil {
-				panic(err)
-			}
-			t.Execute(w, signUpResult)
+	r.ParseForm()
+	username := r.PostFormValue("username")
+	password := r.PostFormValue("password")
+	fmt.Println("username:", username)
+	fmt.Println("password:", password)
+	if len(password) < 1 {
+		//json.NewEncoder(w).Encode("password length less than 1")
+		t, _ := template.ParseFiles("index.html")
+		signUpResult := "password length less than 1"
+		t, err := template.ParseFiles("index.html")
+		if err != nil {
+			panic(err)
 		}
-		_, ok := UserList.Users[username]
-		if ok == false { // record not found, creating account...
-			OPAddUser(username, password)
-			json.NewEncoder(w).Encode("create account success")
-			newURL := fmt.Sprintf("/home?username=%s", username)
-			http.Redirect(w, r, newURL, 302)
+		t.Execute(w, signUpResult)
+	}
+	_, ok := UserList.Users[username]
+	if ok == false { // record not found, creating account...
+		OPAddUser(username, password)
+		//json.NewEncoder(w).Encode("create account success")
+		// redirect to login
+		// TODO: redirect to Login to save repeating code
+		expiration := time.Now().Add(30 * time.Minute)
+		cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
+		http.SetCookie(w, &cookie)
+		http.Redirect(w, r, "/home", 302)
 
-		} else {
-			t, _ := template.ParseFiles("index.html")
-			signUpResult := "user already exists"
-			json.NewEncoder(w).Encode("user already exists")
-			t.Execute(w, signUpResult)
-			return
-		}
+	} else {
+		t, _ := template.ParseFiles("index.html")
+		signUpResult := "user already exists"
+		//json.NewEncoder(w).Encode("user already exists")
+		t.Execute(w, signUpResult)
+		return
 	}
 }
 
@@ -157,42 +160,46 @@ func FollowOrUnfollow(w http.ResponseWriter, r *http.Request) {
 	//input username to follow
 	cookie, _ := r.Cookie("username")
 	if cookie == nil {
-		json.NewEncoder(w).Encode("login first to follow")
+		//json.NewEncoder(w).Encode("login first to follow")
+		log.Println("login first to get follower list")
 		return
 	}
 	username := cookie.Value
 	target, ok := r.URL.Query()["username"]
 	if !ok || len(target[0]) < 1 {
-		json.NewEncoder(w).Encode("url parameter incorrect")
+		//json.NewEncoder(w).Encode("url parameter incorrect")
 		return
 	}
 
 	OPFollowUnFollow(username, target[0])
 
+	newURL := fmt.Sprintf("/userprofile?username=%s", target)
+	http.Redirect(w, r, newURL, 302)
 }
 
 func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	cookie, _ := r.Cookie("username")
 	if cookie == nil {
-		json.NewEncoder(w).Encode("login first to get following list")
+		//json.NewEncoder(w).Encode("login first to get following list")
 		return
 	}
 	username := cookie.Value
 
 	followings := UserList.Users[username].FollowingList
 	//TODO render
-	json.NewEncoder(w).Encode(followings)
+	//json.NewEncoder(w).Encode(followings)
 	t, err := template.ParseFiles("userlist.html")
 	if err != nil {
 		panic(err)
 	}
 	newFollowingTmpl := UserListTmpl{
-		listType: "following",
-		username: username,
-		userlist: followings,
+		AlreadyFollowed: false,
+		Following:       true,
+		UserName:        username,
+		UserList:        followings,
 	}
-	json.NewEncoder(w).Encode(followings)
+	//json.NewEncoder(w).Encode(followings)
 	t.Execute(w, newFollowingTmpl)
 
 	// returnList := ""
@@ -213,7 +220,8 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	cookie, _ := r.Cookie("username")
 	if cookie == nil {
-		json.NewEncoder(w).Encode("login first to get follower list")
+		//json.NewEncoder(w).Encode("login first to get follower list")
+		log.Println("login first to get follower list")
 		return
 	}
 	username := cookie.Value
@@ -225,11 +233,12 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	newFollowerTmpl := UserListTmpl{
-		listType: "follower",
-		username: username,
-		userlist: followers,
+		AlreadyFollowed: false,
+		Following:       false,
+		UserName:        username,
+		UserList:        followers,
 	}
-	json.NewEncoder(w).Encode(followers)
+	//json.NewEncoder(w).Encode(followers)
 	t.Execute(w, newFollowerTmpl)
 	return
 
@@ -240,18 +249,18 @@ func IfFollowing(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	cookie, _ := r.Cookie("username")
 	if cookie == nil {
-		json.NewEncoder(w).Encode(false)
+		//json.NewEncoder(w).Encode(false)
 		return
 	}
 
-	username := cookie.Value
+	//username := cookie.Value
 	target, ok := r.URL.Query()["username"]
 	if !ok || len(target[0]) < 1 {
-		json.NewEncoder(w).Encode(false)
+		//json.NewEncoder(w).Encode(false)
 		return
 	}
-	res := OPCheckIfFollowing(username, target[0])
-	json.NewEncoder(w).Encode(res)
+	//res := OPCheckIfFollowing(username, target[0])
+	//json.NewEncoder(w).Encode(res)
 	return
 }
 
@@ -265,18 +274,19 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		cookie, _ := r.Cookie("username")
 		if cookie == nil {
-			json.NewEncoder(w).Encode("login first to create post")
+			//json.NewEncoder(w).Encode("login first to create post")
 			return
 
 		}
 		username := cookie.Value
-		post := r.PostFormValue("Post")
+		post := r.PostFormValue("body")
 		if post == "" {
-			json.NewEncoder(w).Encode("input is empty")
+			//json.NewEncoder(w).Encode("input is empty")
+			//
 			return
 		}
 		OPAddTweet(username, post)
-		json.NewEncoder(w).Encode("create post success")
+		//json.NewEncoder(w).Encode("create post success")
 
 		newURL := fmt.Sprintf("/home?username=%s", username)
 		http.Redirect(w, r, newURL, 302)
@@ -297,20 +307,23 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
 	pUser, ok := UserList.Users[usernames[0]]
-	h, _ := template.ParseFiles("userprofile.html")
+	h, err := template.ParseFiles("userprofile.html")
+	if err != nil {
+		panic(err)
+	}
 	userProfile := UserTmpl{
-		username:     usernames[0],
-		numTweets:    len(pUser.TweetList),
-		numFollowing: len(pUser.FollowingList),
-		numFollowers: len(pUser.FollowerList),
-		tweetList:    pUser.TweetList,
+		UserName:     usernames[0],
+		NumTweets:    len(pUser.TweetList),
+		NumFollowing: len(pUser.FollowingList),
+		NumFollowers: len(pUser.FollowerList),
+		TweetList:    pUser.TweetList,
 	}
 	h.Execute(w, userProfile)
 }
 
 func MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 	tweets := OPGetRandomTweet()
-	json.NewEncoder(w).Encode(tweets)
+	//json.NewEncoder(w).Encode(tweets)
 	t, _ := template.ParseFiles("moments.html")
 	t.Execute(w, tweets)
 }
