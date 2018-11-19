@@ -60,7 +60,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	t, _ := template.ParseFiles("index.html")
 
-	loginResult := ""
+	// loginResult := ""
 	// logic part of log in
 	username := r.PostFormValue("username")
 	password := r.PostFormValue("password")
@@ -72,8 +72,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("password:", password)
 		pUser, ok := UserList.Users[username]
 		if ok == false { // not found
-			loginResult = "User not found. Please try again."
-			t.Execute(w, loginResult)
+			// loginResult = "User not found. Please try again."
+			// t.Execute(w, loginResult)
 			json.NewEncoder(w).Encode("username or passwd incorrect")
 		} else if password != pUser.Password {
 			loginResult := "Incorrect password. Please try again."

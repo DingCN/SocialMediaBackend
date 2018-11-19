@@ -169,9 +169,11 @@ func ForTestCreateAccount(t *testing.T, username string, password string) string
 	return actual
 
 }
+
 func ForTestLogin(t *testing.T, username string, password string) string {
 	var path = "/login.html"
 	form := url.Values{}
+	form.Add("login", "true")
 	form.Add("username", username)
 	form.Add("password", password)
 	//resp, err = http.PostForm(addr+path, form)
