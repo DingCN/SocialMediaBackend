@@ -1,8 +1,7 @@
 package web
 
 import (
-	"encoding/json"
-	"net/http"
+	
 	"net/http/httptest"
 	"net/url"
 	"reflect"
@@ -13,6 +12,22 @@ import (
 
 var addr = "//127.0.0.1:8080"
 
+// When a user registers, he isn't following any other users.
+// We provide a moment page so that it can get the newest posts even he is not following their owner
+func Test_Moments(t *testing.T) {
+	ForTestCreateAccount(t, "Test_MomentsAlice", "Test_MomentsAlice")
+	ForTestCreateAccount(t, "Test_MomentsBob", "Test_MomentsBob")
+	ForTestCreateAccount(t, "Test_MomentsCain", "Test_MomentsCain")
+
+	ForTestCreatePost(t, "Test_MomentsBob", "Test_MomentsBob's post")
+	ForTestCreatePost(t, "Test_MomentsCain", "Test_MomentsCain's post")
+	actual := ForTestMoments(t)
+	// unable to test TimeStamp since it's set on server side
+	if len(actual) != 2 || actual[1].UserName != "Test_MomentsBob" || actual[1].Body != "Test_MomentsBob's post" || actual[0].UserName != "Test_MomentsCain" || actual[0].Body != "Test_MomentsCain's post" {
+		t.Fatalf("Moments incorrect")
+		fmt.Printf("%+v\n", actual)
+	}
+}
 func Test_CreateAccount(t *testing.T) {
 	var expected = "create account success"
 	actual := ForTestCreateAccount(t, "test1", "test1")
@@ -73,10 +88,10 @@ func Test_CreatePost(t *testing.T) {
 	}
 }
 
-func Test_Follow(t *testing.T) {
+func Test_FollowUnFollow(t *testing.T) {
 	ForTestCreateAccount(t, "Test_FollowAlice", "Test_FollowAlice")
 	ForTestCreateAccount(t, "Test_FollowBob", "Test_FollowBob")
-	ForTestFollow(t, "Test_FollowAlice", "Test_FollowBob")
+	ForTestFollowUnFollow(t, "Test_FollowAlice", "Test_FollowBob")
 
 	// test following list of Alice
 	actual := ForTestFollowingList(t, "Test_FollowAlice")
@@ -96,42 +111,61 @@ func Test_Follow(t *testing.T) {
 		t.Fatalf("FollowerList incorrect")
 	}
 
+	//Testing Unfollow
+	ForTestFollowUnFollow(t, "Test_FollowAlice", "Test_FollowBob")
+
+	// test following list of Alice
+	actual = ForTestFollowingList(t, "Test_FollowAlice")
+	expected = map[string]bool{}
+	eq = reflect.DeepEqual(actual, expected)
+	if !eq {
+		t.Fatalf("FollowingList incorrect")
+	}
+
+	// test follower list of Bob
+	actual = ForTestFollowerList(t, "Test_FollowBob")
+	expected = map[string]bool{}
+	eq = reflect.DeepEqual(actual, expected)
+	if !eq {
+		t.Fatalf("FollowerList incorrect")
+	}
+
 }
 
 //Test for view feeds
+// user only get feeds for those he/she follows
+// ordered by timestamp, new to old
+// Alice follows Bob and Cain, and she only gets feed by these two
 func Test_Home(t *testing.T) {
 	ForTestCreateAccount(t, "Test_HomeAlice", "Test_HomeAlice")
 	ForTestCreateAccount(t, "Test_HomeBob", "Test_HomeBob")
-	ForTestFollow(t, "Test_HomeAlice", "Test_HomeBob")
+	ForTestCreateAccount(t, "Test_HomeCain", "Test_HomeCain")
+	ForTestCreateAccount(t, "Test_HomeDoge", "Test_HomeDoge")
+	ForTestFollowUnFollow(t, "Test_HomeAlice", "Test_HomeBob")
+	ForTestFollowUnFollow(t, "Test_HomeAlice", "Test_HomeCain")
 	// Alice is following Bob
 	ForTestCreatePost(t, "Test_HomeBob", "Test_HomeBob's post")
+	ForTestCreatePost(t, "Test_HomeCain", "Test_HomeCain's post")
+	ForTestCreatePost(t, "Test_HomeBob", "Test_HomeBob's post2")
+	ForTestCreatePost(t, "Test_HomeDoge", "Test_HomeDoge's post")
+
 	actual := ForTestHome(t, "Test_HomeAlice")
 	// unable to test TimeStamp since it's set on server side
-	if actual[0].UserName != "Test_HomeBob" || actual[0].Body != "Test_HomeBob's post" {
+	if len(actual) != 3 || actual[2].UserName != "Test_HomeBob" || actual[2].Body != "Test_HomeBob's post" || actual[1].UserName != "Test_HomeCain" || actual[1].Body != "Test_HomeCain's post" || actual[0].UserName != "Test_HomeBob" || actual[0].Body != "Test_HomeBob's post2" {
 		t.Fatalf("Home(ViewFeeds) incorrect")
 	}
 }
 func Test_UserProfile(t *testing.T) {
 	ForTestCreateAccount(t, "Test_UserProfileAlice", "Test_UserProfileAlice")
 	ForTestCreateAccount(t, "Test_UserProfileBob", "Test_UserProfileBob")
+	ForTestCreateAccount(t, "Test_UserProfileCain", "Test_UserProfileCain")
 	// Alice is following Bob
 	ForTestCreatePost(t, "Test_UserProfileBob", "Test_UserProfileBob's post")
+	ForTestCreatePost(t, "Test_UserProfileCain", "Test_UserProfileCain's post")
 	actual := ForTestUserProfile(t, "Test_UserProfileBob")
 	// unable to test TimeStamp since it's set on server side
-	if actual[0].UserName != "Test_UserProfileBob" || actual[0].Body != "Test_UserProfileBob's post" {
+	if len(actual) != 1 || actual[0].UserName != "Test_UserProfileBob" || actual[0].Body != "Test_UserProfileBob's post" {
 		t.Fatalf("UserProfile incorrect")
-	}
-}
-
-func Test_Moments(t *testing.T) {
-	ForTestCreateAccount(t, "Test_MomentsAlice", "Test_MomentsAlice")
-	ForTestCreateAccount(t, "Test_MomentsBob", "Test_MomentsBob")
-	// Alice is following Bob
-	ForTestCreatePost(t, "Test_MomentsBob", "Test_MomentsBob's post")
-	actual := ForTestMoments(t)
-	// unable to test TimeStamp since it's set on server side
-	if actual[0].UserName != "Test_MomentsBob" || actual[0].Body != "Test_MomentsBob's post" {
-		t.Fatalf("Moments incorrect")
 	}
 }
 
@@ -198,7 +232,7 @@ func ForTestLogin(t *testing.T, username string, password string) string {
 }
 
 func ForTestCreatePost(t *testing.T, username string, post string) string {
-	var path = "/createPost.html"
+	var path = "/createPost"
 	form := url.Values{}
 	form.Add("Post", post)
 	//resp, err = http.PostForm(addr+path, form)
@@ -225,8 +259,8 @@ func ForTestCreatePost(t *testing.T, username string, post string) string {
 	return actual
 }
 
-func ForTestFollow(t *testing.T, username string, targetname string) {
-	var path = "/i/moments.html"
+func ForTestFollowUnFollow(t *testing.T, username string, targetname string) {
+	var path = "/FollowUnfollow"
 	var urlparameter = "?username=" + targetname
 	form := url.Values{}
 	req, err := http.NewRequest("POST", addr+path+urlparameter, strings.NewReader(form.Encode()))
@@ -240,8 +274,6 @@ func ForTestFollow(t *testing.T, username string, targetname string) {
 	res := httptest.NewRecorder()
 	handler := http.HandlerFunc(FollowOrUnfollow)
 	handler.ServeHTTP(res, req)
-	//CreateAccount(res, req)
-
 	return
 }
 

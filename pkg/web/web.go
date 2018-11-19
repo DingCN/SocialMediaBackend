@@ -29,12 +29,12 @@ func (w *Web) Start() error {
 
 	http.HandleFunc("/", Index) // set router
 	http.HandleFunc("/login", Login)
-	http.HandleFunc("/home", Home)
+	http.HandleFunc("/home", Home) // view feeds
 	http.HandleFunc("/createAccount", CreateAccount)
 	http.HandleFunc("/getAllFollowing", GetAllFollowing)
 	http.HandleFunc("/getAllFollower", GetAllFollower)
 	http.HandleFunc("/createPost", CreatePost)
-	http.HandleFunc("/userProfile", UserProfile)
+	http.HandleFunc("/userProfile", UserProfile) //tweet for a single user
 	http.HandleFunc("/i/moments", MomentRandomFeeds)
 	http.HandleFunc("/FollowOrUnfollow", FollowOrUnfollow)
 	//http.HandleFunc("/ListUser", ListUser)
@@ -61,7 +61,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	t, _ := template.ParseFiles("index.html")
 
-	loginResult := ""
+	// loginResult := ""
 	// logic part of log in
 	username := r.PostFormValue("username")
 	password := r.PostFormValue("password")
@@ -73,21 +73,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("password:", password)
 		pUser, ok := UserList.Users[username]
 		if ok == false { // not found
-			//json.NewEncoder(w).Encode("username or passwd incorrect")
 			loginResult = "User not found. Please try again."
 			t.Execute(w, loginResult)
 		} else if password != pUser.Password {
-			//json.NewEncoder(w).Encode("username or passwd incorrect")
 			loginResult := "Incorrect password. Please try again."
 			t.Execute(w, loginResult)
+			json.NewEncoder(w).Encode("username or passwd incorrect")
 		} else { // login success, redirect to home
+
 			expiration := time.Now().Add(30 * time.Minute)
 			cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
 			http.SetCookie(w, &cookie)
 			http.Redirect(w, r, "/home", 302)
+    //Test
+      json.NewEncoder(w).Encode("login success")
 		}
 	} else if r.PostFormValue("signup") != "" {
-		CreateAccount(w, r)
+		  CreateAccount(w, r)
 	}
 }
 
@@ -107,6 +109,11 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	unsortedTweets := OPGetFollowingTweets(pUser.UserName)
+	fmt.Printf("Following post for user: %s found: ", usernames[0])
+	for _, tweet := range unsortedTweets {
+		fmt.Printf("%s; ", tweet.Body)
+	}
+	fmt.Printf("\n")
 	sortedTweets := OPSortTweets(unsortedTweets)
 	userHome := UserTmpl{
 		UserName:     username,
@@ -119,6 +126,13 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+  // log
+	fmt.Printf("Following post for user: %s found: ", usernames[0])
+	for _, tweet := range sortedTweets {
+		fmt.Printf("%s; ", tweet.Body)
+	}
+	fmt.Printf("\n")
+	json.NewEncoder(w).Encode(sortedTweets)
 }
 
 func CreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -186,12 +200,13 @@ func FollowOrUnfollow(w http.ResponseWriter, r *http.Request) {
 
 func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	cookie, _ := r.Cookie("username")
-	if cookie == nil {
-		//json.NewEncoder(w).Encode("login first to get following list")
+
+	usernames, ok := r.URL.Query()["username"]
+	if !ok || len(usernames[0]) < 1 {
+		json.NewEncoder(w).Encode("url parameter incorrect")
 		return
 	}
-	username := cookie.Value
+	username := usernames[0]
 
 	followings := UserList.Users[username].FollowingList
 	//TODO render
@@ -208,30 +223,18 @@ func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 	}
 	//json.NewEncoder(w).Encode(followings)
 	t.Execute(w, newFollowingTmpl)
+	json.NewEncoder(w).Encode(followings)
 
-	// returnList := ""
-	// for user, isFollowing := range followings {
-	// 	if isFollowing == true {
-	// 		returnList = returnList + user
-	// 		returnList = returnList + " "
-	// 	}
-
-	// }
-	// _, err := w.Write([]byte("Users you are following: " + returnList))
-	// if err != nil {
-	// 	panic(err)
-	// }
 }
 
 func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	cookie, _ := r.Cookie("username")
-	if cookie == nil {
-		//json.NewEncoder(w).Encode("login first to get follower list")
-		log.Println("login first to get follower list")
+	usernames, ok := r.URL.Query()["username"]
+	if !ok || len(usernames[0]) < 1 {
+		json.NewEncoder(w).Encode("url parameter incorrect")
 		return
 	}
-	username := cookie.Value
+	username := usernames[0]
 
 	followers := UserList.Users[username].FollowerList
 	//TODO render
@@ -245,8 +248,10 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 		UserName:        username,
 		UserList:        followers,
 	}
-	//json.NewEncoder(w).Encode(followers)
+
 	t.Execute(w, newFollowerTmpl)
+  //Test
+	json.NewEncoder(w).Encode(followers)
 	return
 
 }
@@ -311,6 +316,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 		log.Println("Url Param 'username' is missing")
 		return
 	}
+	username := usernames[0]
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
 	pUser, ok := UserList.Users[usernames[0]]
@@ -326,11 +332,14 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 		TweetList:    pUser.TweetList,
 	}
 	h.Execute(w, userProfile)
+  //Test
+	tweets := OPGetTweetByUsername(username)
+	json.NewEncoder(w).Encode(tweets)
 }
 
 func MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 	tweets := OPGetRandomTweet()
-	//json.NewEncoder(w).Encode(tweets)
 	t, _ := template.ParseFiles("moments.html")
 	t.Execute(w, tweets)
+	json.NewEncoder(w).Encode(tweets)
 }

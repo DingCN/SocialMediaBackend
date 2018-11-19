@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"sort"
 	"time"
 )
@@ -8,7 +9,7 @@ import (
 func OPAddUser(username string, password string) bool {
 	UserList.mutex.Lock()
 	defer UserList.mutex.Unlock()
-	UserList.Users[username] = &User{UserName: username, Password: password}
+	UserList.Users[username] = &User{UserName: username, Password: password, FollowingList: map[string]bool{}, FollowerList: map[string]bool{}}
 	return true
 }
 
@@ -25,6 +26,7 @@ func OPAddTweet(username string, post string) bool {
 	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
 	CentralTweetList.Tweets = append(CentralTweetList.Tweets, &tweet)
 	UserList.Users[username].TweetList = append(UserList.Users[username].TweetList, tweet)
+	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
 	//sort
 
 	return true
@@ -51,14 +53,17 @@ func OPGetFollowingTweets(username string) []Tweet {
 	for _, username := range followings {
 		res = append(res, UserList.Users[username].TweetList...) // ... lets you pass multiple arguments to a variadic function from a slice
 	}
+	// log
+
 	return res
 }
 
 func OPSortTweets(tweets []Tweet) []Tweet {
 	res := make(timeSlice, 0, len(tweets))
-	for _, d := range res {
+	for _, d := range tweets {
 		res = append(res, d)
 	}
+
 	sort.Sort(res)
 	return res
 }
@@ -66,9 +71,10 @@ func OPSortTweets(tweets []Tweet) []Tweet {
 func OPGetAllFollowing(username string) []string {
 	followings := UserList.Users[username].FollowingList
 	returnList := []string{}
-	for username, isFollowing := range followings {
+	for followingname, isFollowing := range followings {
 		if isFollowing == true {
-			returnList = append(returnList, username)
+			returnList = append(returnList, followingname)
+			fmt.Printf("user:%s 's following found: %s\n", username, followingname)
 
 		}
 	}
@@ -78,14 +84,19 @@ func OPGetAllFollowing(username string) []string {
 func OPFollowUnFollow(username string, targetname string) bool {
 	res, ok := UserList.Users[username].FollowingList[targetname]
 	if ok == true && res == true {
-		//already following, set UnFollow
-		UserList.Users[username].FollowingList[targetname] = false
-		UserList.Users[targetname].FollowerList[username] = false
+		//already following, set UnFollow by deleting it instead
+		delete(UserList.Users[username].FollowingList, targetname)
+		delete(UserList.Users[targetname].FollowerList, username)
 
+		// UserList.Users[username].FollowingList[targetname] = false
+		// UserList.Users[targetname].FollowerList[username] = false
+		fmt.Printf("%s just unfollowed %s\n", username, targetname)
 	} else {
 		//set Follow
 		UserList.Users[username].FollowingList[targetname] = true
 		UserList.Users[targetname].FollowerList[username] = true
+		fmt.Printf("%s just followed %s\n", username, targetname)
+
 	}
 	return true
 }
