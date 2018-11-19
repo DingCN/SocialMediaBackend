@@ -14,37 +14,37 @@
     <div>
         <div class="user">
             <h2>
-                {{.UserName}}'s Profile Page
+                @{{.username}}
                 <!-- @HongyuDing -->
             </h2>
             <p> 
                 Tweets: 
-                <a href="/userProfile?username={{.UserName}}">
-                {{.NumTweets}}
+                <a href="/userProfile?username={{.username}}">
+                {{.numTweets}}
                 </a>
                 Following: 
-                <a href="/getAllFollowing?username={{.UserName}}">
-                {{.NumFollowing}}
+                <a href="/getAllFollowing?username={{.username}}">
+                {{.numFollowing}}
                 </a>
                 Followers: 
-                <a href="/getAllFollower?username={{.UserName}}">
-                {{.NumFollowers}}
+                <a href="/getAllFollower?username={{.username}}">
+                {{.numFollowers}}
                 </a>
             </p>
             <p>
-                <form action="/FollowOrUnfollow?username={{.UserName}}" method="POST">
-                    <input type="submit" name="follow" value="Follow">
+                <form action="/FollowOrUnfollow?username={{.username}}" method="POST">
+                <input type="submit" name="follow" value="Follow">
                 </form>
             </p>
         </div>                                
     </div>
         <div class="timeline">
             <h3>>Tweets</h3>
-            {{range $t := .TweetList}}
+            {{range $t := .tweetList}}
             <div class="tweet">
                 <p>
-                    <a href="/userProfile?username={{$t.UserName}}">@{{$t.UserName}}</a> 
-                    * {{$t.Timestamp}}
+                    <a href="/ViewFeeds?username={{$t.UserName}}">@{{$t.UserName}}</a> 
+                    * {{$t.TimeStamp}}
                 </p>
                 <p>{{$t.Body}}</p>
             </div>

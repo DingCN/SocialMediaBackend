@@ -7,20 +7,15 @@
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
 </head>
 <body>
-    <div class="header">
-        <a href="/home">Home</a>
-        <a href="/i/moments">Moments</a>
-    </div>
-
-    {{if .Following}}
-        <h3>Users followed by {{.UserName}}</h3>
+    {{if .listType == "following"}}
+        <h3>Users followed by {{.username}}</h3>
     {{else}}
-        <h3>Users following {{.UserName}}</h3>
+        <h3>Users following {{.username}}</h3>
     {{end}}
-    {{range $k, $_:= .UserList}}
+    {{range k, _:= .userlist}}
     <div class="user_list">
-        <a href="/userprofile?username={{$k}}">
-        @{{$k}}
+        <a href="/userprofile?username={{u}}">
+        @{{k}}
         </a>
     </div>
     {{end}}

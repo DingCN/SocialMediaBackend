@@ -19,11 +19,9 @@
             <form action="/login" method="POST">
             <div>
                 <h3>> Already have an account?</h3>
-                <p>
                 {{if .}}
                     <p>{{.}}</p>
-                {{end}} 
-                </p>
+                {{end}}
                 <div>
                     <input name="username" maxlength="50" placeholder="Name" type="text"/>
                 </div>

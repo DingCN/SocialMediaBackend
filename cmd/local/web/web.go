@@ -1,8 +1,9 @@
 package main
 
 import (
-	"final_project/pkg/web"
 	"os"
+
+	"github.com/DingCN/SocialMediaBackend/pkg/web"
 )
 
 func main() {
