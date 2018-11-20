@@ -61,7 +61,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	t, _ := template.ParseFiles("frontend/index.html")
 
-	loginResult := ""
+	//loginResult := ""
 	// logic part of log in
 	username := r.PostFormValue("username")
 	password := r.PostFormValue("password")
@@ -71,11 +71,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if r.PostFormValue("login") != "" {
 		fmt.Println("username:", username)
 		fmt.Println("password:", password)
-		pUser, ok := UserList.Users[username]
+		// pUser, ok := UserList.Users[username]
+		_, ok := UserList.Users[username]
 		if ok == false { // not found
-			loginResult = "User not found. Please try again."
-			t.Execute(w, loginResult)
-		} else if password != pUser.Password {
+			// 	loginResult = "User not found. Please try again."
+			// 	t.Execute(w, loginResult)
+			// } else if password != pUser.Password {
 			loginResult := "Incorrect password. Please try again."
 			t.Execute(w, loginResult)
 			json.NewEncoder(w).Encode("username or passwd incorrect")
@@ -104,7 +105,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Println("login first to get follower list")
 	}
-	h, err := template.ParseFiles("home.html")
+	h, err := template.ParseFiles("frontend/home.html")
 	if err != nil {
 		panic(err)
 	}
@@ -163,6 +164,7 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 		cookie := http.Cookie{Name: "username", Value: username, Expires: expiration}
 		http.SetCookie(w, &cookie)
 		http.Redirect(w, r, "/home", 302)
+
 		json.NewEncoder(w).Encode("create account success")
 
 	} else {
@@ -171,8 +173,8 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		t.Execute(w, "user already exists")
-		json.NewEncoder(w).Encode("user already exists")
-		return
+		// json.NewEncoder(w).Encode("user already exists")
+
 	}
 }
 
@@ -211,7 +213,7 @@ func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 	followings := UserList.Users[username].FollowingList
 	//TODO render
 	//json.NewEncoder(w).Encode(followings)
-	t, err := template.ParseFiles("userlist.html")
+	t, err := template.ParseFiles("frontend/userlist.html")
 	if err != nil {
 		panic(err)
 	}
@@ -238,7 +240,7 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 
 	followers := UserList.Users[username].FollowerList
 	//TODO render
-	t, err := template.ParseFiles("userlist.html")
+	t, err := template.ParseFiles("frontend/userlist.html")
 	if err != nil {
 		panic(err)
 	}
@@ -280,7 +282,7 @@ func IfFollowing(w http.ResponseWriter, r *http.Request) {
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	//tested
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("createPost.html")
+		t, _ := template.ParseFiles("frontend/createPost.html")
 		t.Execute(w, nil)
 	} else {
 		r.ParseForm()
@@ -320,7 +322,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
 	pUser, ok := UserList.Users[usernames[0]]
-	h, err := template.ParseFiles("userprofile.html")
+	h, err := template.ParseFiles("frontend/userprofile.html")
 	if err != nil {
 		panic(err)
 	}
