@@ -77,9 +77,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			// 	loginResult = "User not found. Please try again."
 			// 	t.Execute(w, loginResult)
 			// } else if password != pUser.Password {
-			loginResult := "Incorrect password. Please try again."
+			loginResult := "Incorrect username or password. Please try again."
 			t.Execute(w, loginResult)
-			json.NewEncoder(w).Encode("username or passwd incorrect")
+			// json.NewEncoder(w).Encode("username or passwd incorrect")
 		} else { // login success, redirect to home
 
 			expiration := time.Now().Add(30 * time.Minute)
@@ -133,7 +133,6 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s; ", tweet.Body)
 	}
 	fmt.Printf("\n")
-	json.NewEncoder(w).Encode(sortedTweets)
 }
 
 func CreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +151,7 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		t.Execute(w, "password length less than 1")
-		json.NewEncoder(w).Encode("password length less than 1")
+		//json.NewEncoder(w).Encode("password length less than 1")
 	}
 	_, ok := UserList.Users[username]
 	if ok == false { // record not found, creating account...
@@ -223,9 +222,8 @@ func GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 		UserName:        username,
 		UserList:        followings,
 	}
-	//json.NewEncoder(w).Encode(followings)
 	t.Execute(w, newFollowingTmpl)
-	json.NewEncoder(w).Encode(followings)
+	//json.NewEncoder(w).Encode(followings)
 
 }
 
@@ -253,7 +251,7 @@ func GetAllFollower(w http.ResponseWriter, r *http.Request) {
 
 	t.Execute(w, newFollowerTmpl)
 	//Test
-	json.NewEncoder(w).Encode(followers)
+	//json.NewEncoder(w).Encode(followers)
 	return
 
 }
@@ -288,14 +286,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		cookie, _ := r.Cookie("username")
 		if cookie == nil {
-			//json.NewEncoder(w).Encode("login first to create post")
+			json.NewEncoder(w).Encode("login first to create post")
 			return
 
 		}
 		username := cookie.Value
 		post := r.PostFormValue("body")
 		if post == "" {
-			//json.NewEncoder(w).Encode("input is empty")
+			json.NewEncoder(w).Encode("input is empty")
 			//
 			return
 		}

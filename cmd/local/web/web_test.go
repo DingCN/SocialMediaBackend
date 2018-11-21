@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -35,36 +34,43 @@ func Test_Moments(t *testing.T) {
 	}
 }
 func Test_CreateAccount(t *testing.T) {
-	var expected = "create account success"
+	var expected = "\"create account success\"\n"
 	actual := ForTestCreateAccount(t, "test1", "test1")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
 	}
 }
 func Test_CreateTwoAccount(t *testing.T) {
-	var expected = "create account success"
+	var expected = "\"create account success\"\n"
 	actual := ForTestCreateAccount(t, "test2-1", "test2-1")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
 	}
-	expected = "create account success"
+	expected = "\"create account success\"\n"
 	actual = ForTestCreateAccount(t, "test2-2", "test2-2")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
 	}
 }
+
+// First time create should return success, second time should fail since user already exists
 func Test_CreateAccountTwice(t *testing.T) {
-	var expected = "create account success"
+	var expected = "\"create account success\"\n"
 	actual := ForTestCreateAccount(t, "test3", "test3")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
 	}
+
+	res := httptest.NewRecorder()
 	tmpl, err := template.ParseFiles("frontend/index.html")
 	if err != nil {
 		panic(err)
 	}
-	tmpl.Execute(w, "user already exists")
-	expected = "user already exists"
+	tmpl.Execute(res, "user already exists")
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	expected = string(body)
+
 	actual = ForTestCreateAccount(t, "test3", "test3")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
@@ -73,13 +79,23 @@ func Test_CreateAccountTwice(t *testing.T) {
 
 func Test_Login(t *testing.T) {
 	ForTestCreateAccount(t, "test4", "test4")
-	var expected = "login success"
+	var expected = "\"login success\"\n"
 	actual := ForTestLogin(t, "test4", "test4")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
 	}
 
-	expected = "username or passwd incorrect"
+	res := httptest.NewRecorder()
+	tmpl, err := template.ParseFiles("frontend/index.html")
+	if err != nil {
+		panic(err)
+	}
+	loginResult := "Incorrect username or password. Please try again."
+	tmpl.Execute(res, loginResult)
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	expected = string(body)
+
 	actual = ForTestLogin(t, "4tset", "4tset")
 	if actual != expected {
 		t.Fatalf("Expected %s got %s", expected, actual)
@@ -91,6 +107,7 @@ func Test_CreatePost(t *testing.T) {
 
 	ForTestLogin(t, "Test_CreatePost", "Test_CreatePost")
 	/////TODO Fatal bug if forged a non-exist username
+
 	actual := ForTestCreatePost(t, "Test_CreatePost", "Test_CreatePost")
 	var expected = "create post success"
 
@@ -106,20 +123,54 @@ func Test_FollowUnFollow(t *testing.T) {
 
 	// test following list of Alice
 	actual := ForTestFollowingList(t, "Test_FollowAlice")
-	var expected = map[string]bool{}
-	expected["Test_FollowBob"] = true
-	eq := reflect.DeepEqual(actual, expected)
-	if !eq {
-		t.Fatalf("FollowingList incorrect")
+	var followings = map[string]bool{}
+	followings["Test_FollowBob"] = true
+	//TODO render
+
+	res := httptest.NewRecorder()
+	tmpl, err := template.ParseFiles("frontend/userlist.html")
+	if err != nil {
+		panic(err)
 	}
+	newFollowingTmpl := web.UserListTmpl{
+		AlreadyFollowed: false,
+		Following:       true,
+		UserName:        "Test_FollowAlice",
+		UserList:        followings,
+	}
+	tmpl.Execute(res, newFollowingTmpl)
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	expected := string(body)
+	if actual != expected {
+		t.Fatalf("Expected %s got %s", expected, actual)
+	}
+	// eq := reflect.DeepEqual(actual, expected)
+	// if !eq {
+	// 	t.Fatalf("FollowingList incorrect")
+	// }
 
 	// test follower list of Bob
 	actual = ForTestFollowerList(t, "Test_FollowBob")
-	expected = map[string]bool{}
-	expected["Test_FollowAlice"] = true
-	eq = reflect.DeepEqual(actual, expected)
-	if !eq {
-		t.Fatalf("FollowerList incorrect")
+	var followers = map[string]bool{}
+	followers["Test_FollowAlice"] = true
+	res = httptest.NewRecorder()
+	tmpl, err = template.ParseFiles("frontend/userlist.html")
+	if err != nil {
+		panic(err)
+	}
+	newFollowerTmpl := web.UserListTmpl{
+		AlreadyFollowed: false,
+		Following:       false,
+		UserName:        "Test_FollowBob",
+		UserList:        followers,
+	}
+	tmpl.Execute(res, newFollowerTmpl)
+	resp = res.Result()
+	body, _ = ioutil.ReadAll(resp.Body)
+	expected = string(body)
+	if actual != expected {
+		t.Fatalf("Expected %s got %s", expected, actual)
 	}
 
 	//Testing Unfollow
@@ -127,18 +178,47 @@ func Test_FollowUnFollow(t *testing.T) {
 
 	// test following list of Alice
 	actual = ForTestFollowingList(t, "Test_FollowAlice")
-	expected = map[string]bool{}
-	eq = reflect.DeepEqual(actual, expected)
-	if !eq {
-		t.Fatalf("FollowingList incorrect")
+	followings = map[string]bool{}
+
+	res = httptest.NewRecorder()
+	tmpl, err = template.ParseFiles("frontend/userlist.html")
+	if err != nil {
+		panic(err)
+	}
+	newFollowingTmpl = web.UserListTmpl{
+		AlreadyFollowed: false,
+		Following:       true,
+		UserName:        "Test_FollowAlice",
+		UserList:        followings,
+	}
+	tmpl.Execute(res, newFollowingTmpl)
+	resp = res.Result()
+	body, _ = ioutil.ReadAll(resp.Body)
+	expected = string(body)
+	if actual != expected {
+		t.Fatalf("Expected %s got %s", expected, actual)
 	}
 
 	// test follower list of Bob
 	actual = ForTestFollowerList(t, "Test_FollowBob")
-	expected = map[string]bool{}
-	eq = reflect.DeepEqual(actual, expected)
-	if !eq {
-		t.Fatalf("FollowerList incorrect")
+	followers = map[string]bool{}
+	res = httptest.NewRecorder()
+	tmpl, err = template.ParseFiles("frontend/userlist.html")
+	if err != nil {
+		panic(err)
+	}
+	newFollowerTmpl = web.UserListTmpl{
+		AlreadyFollowed: false,
+		Following:       false,
+		UserName:        "Test_FollowBob",
+		UserList:        followers,
+	}
+	tmpl.Execute(res, newFollowerTmpl)
+	resp = res.Result()
+	body, _ = ioutil.ReadAll(resp.Body)
+	expected = string(body)
+	if actual != expected {
+		t.Fatalf("Expected %s got %s", expected, actual)
 	}
 
 }
@@ -162,6 +242,14 @@ func Test_Home(t *testing.T) {
 
 	actual := ForTestHome(t, "Test_HomeAlice")
 	// unable to test TimeStamp since it's set on server side
+	userHome := web.UserTmpl{
+		UserName:     "Test_HomeAlice",
+		NumTweets:    0,
+		NumFollowing: 3,
+		NumFollowers: 0,
+		TweetList:    sortedTweets,
+	}
+	err = h.Execute(w, userHome)
 	if len(actual) != 3 || actual[2].UserName != "Test_HomeBob" || actual[2].Body != "Test_HomeBob's post" || actual[1].UserName != "Test_HomeCain" || actual[1].Body != "Test_HomeCain's post" || actual[0].UserName != "Test_HomeBob" || actual[0].Body != "Test_HomeBob's post2" {
 		t.Fatalf("Home(ViewFeeds) incorrect")
 	}
@@ -194,7 +282,6 @@ func ForTestCreateAccount(t *testing.T, username string, password string) string
 	form := url.Values{}
 	form.Add("username", username)
 	form.Add("password", password)
-	//resp, err = http.PostForm(addr+path, form)
 	req, err := http.NewRequest("POST", addr+path, strings.NewReader(form.Encode()))
 	if err != nil {
 		t.Fatal(err)
@@ -203,27 +290,12 @@ func ForTestCreateAccount(t *testing.T, username string, password string) string
 	res := httptest.NewRecorder()
 	handler := http.HandlerFunc(web.CreateAccount)
 	handler.ServeHTTP(res, req)
-	// resp := res.Result().Body.Read
-	// fmt.Printf("%+v", resp)
 	resp := res.Result()
-
 	body, _ := ioutil.ReadAll(resp.Body)
-
 	fmt.Println(resp.StatusCode)
-
 	fmt.Println(resp.Header.Get("Content-Type"))
-
 	fmt.Println(string(body))
-	var actual string
-	err = json.NewDecoder(res.Body).Decode(&actual)
-	if err != nil {
-		panic(err)
-		http.Error(res, err.Error(), 400)
-		t.Fatalf("HTTP error")
-		return ""
-	}
-	return actual
-
+	return string(body)
 }
 
 func ForTestLogin(t *testing.T, username string, password string) string {
@@ -241,17 +313,14 @@ func ForTestLogin(t *testing.T, username string, password string) string {
 	res := httptest.NewRecorder()
 	handler := http.HandlerFunc(web.Login)
 	handler.ServeHTTP(res, req)
-	//CreateAccount(res, req)
-	var actual string
-	err = json.NewDecoder(res.Body).Decode(&actual)
-	if err != nil {
-		panic(err)
-		http.Error(res, err.Error(), 400)
-		t.Fatalf("HTTP error")
-		return ""
-	}
 
-	return actual
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header.Get("Content-Type"))
+	fmt.Println(string(body))
+
+	return string(body)
 }
 
 func ForTestCreatePost(t *testing.T, username string, post string) string {
@@ -300,7 +369,7 @@ func ForTestFollowUnFollow(t *testing.T, username string, targetname string) {
 	return
 }
 
-func ForTestFollowingList(t *testing.T, username string) map[string]bool {
+func ForTestFollowingList(t *testing.T, username string) string {
 	var path = "getAllFollowing.html"
 	var urlparameter = "?username=" + username
 	form := url.Values{}
@@ -313,17 +382,15 @@ func ForTestFollowingList(t *testing.T, username string) map[string]bool {
 	handler := http.HandlerFunc(web.GetAllFollowing)
 	handler.ServeHTTP(res, req)
 
-	var actual = map[string]bool{}
-	err = json.NewDecoder(res.Body).Decode(&actual)
-	if err != nil {
-		http.Error(res, err.Error(), 400)
-		t.Fatalf("HTTP error")
-		return nil
-	}
-	return actual
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header.Get("Content-Type"))
+	fmt.Println(string(body))
+	return string(body)
 }
 
-func ForTestFollowerList(t *testing.T, username string) map[string]bool {
+func ForTestFollowerList(t *testing.T, username string) string {
 	var path = "getAllFollower.html"
 	var urlparameter = "?username=" + username
 	form := url.Values{}
@@ -336,17 +403,15 @@ func ForTestFollowerList(t *testing.T, username string) map[string]bool {
 	handler := http.HandlerFunc(web.GetAllFollower)
 	handler.ServeHTTP(res, req)
 
-	var actual = map[string]bool{}
-	err = json.NewDecoder(res.Body).Decode(&actual)
-	if err != nil {
-		http.Error(res, err.Error(), 400)
-		t.Fatalf("HTTP error")
-		return nil
-	}
-	return actual
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header.Get("Content-Type"))
+	fmt.Println(string(body))
+	return string(body)
 }
 
-func ForTestHome(t *testing.T, username string) []web.Tweet {
+func ForTestHome(t *testing.T, username string) string {
 
 	var path = "home.html"
 	var urlparameter = "?username=" + username
@@ -362,14 +427,12 @@ func ForTestHome(t *testing.T, username string) []web.Tweet {
 	handler := http.HandlerFunc(web.Home)
 	handler.ServeHTTP(res, req)
 
-	var actual []web.Tweet
-	err = json.NewDecoder(res.Body).Decode(&actual)
-	if err != nil {
-		http.Error(res, err.Error(), 400)
-		t.Fatalf("HTTP error")
-		return nil
-	}
-	return actual
+	resp := res.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header.Get("Content-Type"))
+	fmt.Println(string(body))
+	return string(body)
 }
 
 func ForTestUserProfile(t *testing.T, username string) []web.Tweet {
