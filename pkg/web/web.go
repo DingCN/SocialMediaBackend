@@ -195,7 +195,7 @@ func FollowOrUnfollow(w http.ResponseWriter, r *http.Request) {
 
 	OPFollowUnFollow(username, target[0])
 
-	newURL := fmt.Sprintf("/userprofile?username=%s", target[0])
+	newURL := fmt.Sprintf("/userProfile?username=%s", target[0])
 	http.Redirect(w, r, newURL, 302)
 }
 
