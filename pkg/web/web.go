@@ -195,7 +195,7 @@ func FollowOrUnfollow(w http.ResponseWriter, r *http.Request) {
 
 	OPFollowUnFollow(username, target[0])
 
-	newURL := fmt.Sprintf("/userprofile?username=%s", target)
+	newURL := fmt.Sprintf("/userprofile?username=%s", target[0])
 	http.Redirect(w, r, newURL, 302)
 }
 
@@ -319,22 +319,20 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	username := usernames[0]
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
-	pUser, ok := UserList.Users[usernames[0]]
+	pUser, ok := UserList.Users[username]
 	h, err := template.ParseFiles("frontend/userprofile.html")
 	if err != nil {
 		panic(err)
 	}
 	userProfile := UserTmpl{
-		UserName:     usernames[0],
+		UserName:     username,
 		NumTweets:    len(pUser.TweetList),
 		NumFollowing: len(pUser.FollowingList),
 		NumFollowers: len(pUser.FollowerList),
 		TweetList:    pUser.TweetList,
 	}
 	h.Execute(w, userProfile)
-	//Test
-	tweets := OPGetTweetByUsername(username)
-	json.NewEncoder(w).Encode(tweets)
+
 }
 
 func MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
@@ -344,5 +342,4 @@ func MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	t.Execute(w, tweets)
-	json.NewEncoder(w).Encode(tweets)
 }
