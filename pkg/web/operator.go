@@ -41,7 +41,7 @@ func OPGetRandomTweet() []Tweet {
 	for i := len(CentralTweetList.Tweets) - 1; i >= 0; i-- {
 		tweets = append(tweets, *CentralTweetList.Tweets[i])
 		count++
-		if count >= 3 { ///////////////////////////////////////////////////////////////////////TODO add to config
+		if count >= MaxFeedsNum { ///////////////////////////////////////////////////////////////////////TODO add to config
 			return tweets
 		}
 	}
