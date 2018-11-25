@@ -169,12 +169,3 @@ func (Storage *storage) CheckIfFollowing(username string, targetname string) (bo
 	}
 	return false, nil
 }
-
-// deprecated
-func (Storage *storage) GetAllUsers() []string {
-	var res []string
-	for username, _ := range Storage.UserList.Users {
-		res = append(res, username)
-	}
-	return res
-}
