@@ -1,0 +1,76 @@
+syntax = "proto3";
+package protocol;
+
+// import "google/protobuf/timestamp.proto";
+
+
+// option go_package = "github.com/golang/protobuf/ptypes/any";
+service TwitterRPC{
+    rpc SignupRPC (SignupRequest) returns (SignupReply){}
+    rpc LoginRPC (LoginRequest) returns (LoginReply){}
+
+    rpc FollowUnFollowRPC (FollowUnFollowRequest) returns (FollowUnFollowReply){}
+    rpc AddTweetRPC (AddTweetRequest) returns (AddTweetReply){}
+    // rpc GetFollowingTweetsRPC (GetFollowingTweetsRequest) returns (GetFollowingTweetsReply){}
+    // rpc GetRandomTweetRPC (GetRandomTweetRequest) returns (GetRandomTweetReply){}
+}
+
+message SignupRequest{
+    string username = 1;
+    string password = 2;
+}
+message SignupReply{
+    string username = 1;
+    bool success = 2;
+}
+
+message LoginRequest{
+    string username = 1;
+    string password = 2;
+}
+message LoginReply{
+    string username = 1;
+    bool success = 2;
+}
+
+message FollowUnFollowRequest{
+    string username = 1;
+    string targetname = 2;
+}
+message FollowUnFollowReply{
+    string username = 1;
+    string targetname = 2;
+    bool success = 3;
+}
+
+message AddTweetRequest{
+    string username = 1;
+    string post = 2;
+}
+message AddTweetReply{
+    string username = 1;
+    bool success = 2;
+}
+
+// message GetRandomTweetRequest{
+//     string username = 1;
+//     string password = 2;
+// }
+// message GetRandomTweetReply{
+//     string username = 1;
+//     bool success = 2;
+// }
+
+// message GetFollowingTweetsRequest{
+//     string username = 1;
+// }
+// message GetFollowingTweetsReply{
+//     string username = 1;
+//     repeated Tweet tweet = 2;
+//     bool success = 3;
+// }
+// message Tweet{
+//     string UserName = 1;
+//     google.protobuf.Timestamp Timestamp = 2;
+// 	string Body = 3;
+// }

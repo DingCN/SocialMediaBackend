@@ -1,11 +1,27 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
+// func RPCAddUser(ctx context.Context, in protocol.SignupRequest) (protocol.SignupReply, error) {
+// 	username := in.GetUsername()
+// 	password := in.GetPassword()
+// 	UserList.mutex.Lock()
+
+// 	defer UserList.mutex.Unlock()
+// 	UserList.Users[username] = &User{UserName: username, Password: password, FollowingList: map[string]bool{}, FollowerList: map[string]bool{}}
+
+// 	reply := protocol.SignupReply{}
+// 	reply.Username = username
+// 	reply.Success = true
+// 	return reply, nil
+// }
 func OPAddUser(username string, password string) bool {
 	UserList.mutex.Lock()
 	defer UserList.mutex.Unlock()
@@ -27,8 +43,6 @@ func OPAddTweet(username string, post string) bool {
 	CentralTweetList.Tweets = append(CentralTweetList.Tweets, &tweet)
 	UserList.Users[username].TweetList = append(UserList.Users[username].TweetList, tweet)
 	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
-	//sort
-
 	return true
 }
 
@@ -54,8 +68,8 @@ func OPGetFollowingTweets(username string) []Tweet {
 		res = append(res, UserList.Users[username].TweetList...) // ... lets you pass multiple arguments to a variadic function from a slice
 	}
 	// log
-
-	return res
+	sortedTweets := OPSortTweets(res)
+	return sortedTweets
 }
 
 func OPSortTweets(tweets []Tweet) []Tweet {
@@ -115,5 +129,44 @@ func OPGetAllUsers() []string {
 		res = append(res, username)
 	}
 	return res
+}
 
+func (web *Web) SignupRPCSend(username string, password string) (*protocol.SignupReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.SignupRequest{}
+	request.Username = username
+	request.Password = password
+	reply, err := web.c.SignupRPC(ctx, &request)
+	return reply, err
+}
+
+func (web *Web) LoginRPCSend(username string, password string) (*protocol.LoginReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.LoginRequest{}
+	request.Username = username
+	request.Password = password
+	reply, err := web.c.LoginRPC(ctx, &request)
+	return reply, err
+}
+
+func (web *Web) AddTweetRPCSend(username string, post string) (*protocol.AddTweetReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.AddTweetRequest{}
+	request.Username = username
+	request.Post = post
+	reply, err := web.c.AddTweetRPC(ctx, &request)
+	return reply, err
+}
+
+func (web *Web) FollowUnFollowRPCSend(username string, targetname string) (*protocol.FollowUnFollowReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.FollowUnFollowRequest{}
+	request.Username = username
+	request.Targetname = targetname
+	reply, err := web.c.FollowUnFollowRPC(ctx, &request)
+	return reply, err
 }
