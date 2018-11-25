@@ -13,7 +13,7 @@ server runs at localhost:8080 by default
   "web.go" then calls "operator.go" to get or modify our data structures, which are stored in "model.go".
       
 ## Note
-Server uses memory as storage in Part 1, but out of memory is not handled, since we are using database eventually 
+Server uses memory as storage in Part 1, but out of memory is not handled.
 
 ## Reference
   Based on Adam's github code and the [tutorial](astaxie.gitbooks.io/build-web-application-with-golang) 
