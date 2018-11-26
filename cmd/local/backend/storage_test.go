@@ -85,14 +85,81 @@ func TestGetRandomTweet(t *testing.T) {
 	}
 }
 func TestFollowUnFollow(t *testing.T) {
+	backend, _ := backend.New()
+	backend.Storage.AddUser("user1", "123456")
+	backend.Storage.AddUser("user2", "12345678")
+	backend.Storage.AddUser("user3", "12345678")
+	backend.Storage.FollowUnFollow("user1", "user2")
+	backend.Storage.FollowUnFollow("user1", "user3")
+	// Test1 - normal case
+	following, err := backend.Storage.CheckIfFollowing("user1", "user2")
+	if !following || err != nil {
+		t.Fatalf("TestFollowUnFollow - test1 incorrect")
+	}
+	backend.Storage.FollowUnFollow("user1", "user3")
+	following, err = backend.Storage.CheckIfFollowing("user1", "user3")
+	if following || err != nil {
+		t.Fatalf("TestFollowUnFollow - test1 incorrect")
+	}
 
+	// Test2 - Follow non-existing user
+	following, err = backend.Storage.CheckIfFollowing("user1", "nilUser")
+	if following == true {
+		t.Fatalf("Test FollowUnFollow - test2 wrong return value")
+	}
+	if err == nil {
+		t.Fatalf("Test FollowUnFollow - test2 error type incorrect")
+	}
 }
 func TestCheckIfFollowing(t *testing.T) {
-
+	backend, _ := backend.New()
+	backend.Storage.AddUser("user1", "123456")
+	backend.Storage.AddUser("user2", "1234567")
+	backend.Storage.FollowUnFollow("user1", "user2")
+	// Test1 - normal case
+	following, err := backend.Storage.CheckIfFollowing("user1", "user2")
+	if !following || err != nil {
+		t.Fatalf("TestCheckIfFollowing - test1 incorrect")
+	}
+	backend.Storage.FollowUnFollow("user1", "user2")
+	following, err = backend.Storage.CheckIfFollowing("user1", "user2")
+	if following || err != nil {
+		t.Fatalf("TestCheckIfFollowing - test1 incorrect")
+	}
 }
 func TestGetAllFollowing(t *testing.T) {
+	backend, _ := backend.New()
+	backend.Storage.AddUser("user1", "123456")
+	backend.Storage.AddUser("user2", "1234567")
+	backend.Storage.AddUser("user3", "12345678")
+	backend.Storage.FollowUnFollow("user1", "user2")
+	backend.Storage.FollowUnFollow("user1", "user3")
+
+	followingList, err := backend.Storage.GetAllFollowing("user1")
+	// Test1 - normal case
+	if len(followingList) != 2 || err != nil {
+		t.Fatalf("TestGetAllFollowing - test1 incorrect")
+	}
 
 }
 func TestGetFollowingTweets(t *testing.T) {
+	backend, _ := backend.New()
+	backend.Storage.AddUser("user1", "123456")
+	backend.Storage.AddUser("user2", "1234567")
+	backend.Storage.AddUser("user3", "12345678")
+	backend.Storage.FollowUnFollow("user1", "user2")
+	backend.Storage.FollowUnFollow("user1", "user3")
+	backend.Storage.AddTweet("user2", "user2's tweet")
+	backend.Storage.AddTweet("user3", "user3's tweet1")
+	backend.Storage.AddTweet("user2", "user2's tweet2")
+	backend.Storage.AddTweet("user3", "user3's tweet2")
 
+	tweetList, _ := backend.Storage.GetFollowingTweets("user1")
+	if len(tweetList) != 4 {
+		t.Fatalf("TestGetFollowingTweets: incorrect number")
+	}
+
+	if tweetList[0].UserName != "user3" {
+		t.Fatalf("TestGetFollowingTweets: incorrect order")
+	}
 }

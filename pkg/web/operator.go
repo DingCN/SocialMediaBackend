@@ -72,6 +72,7 @@ func OPGetFollowingTweets(username string) []Tweet {
 	return sortedTweets
 }
 
+// OPSortTweets - sort tweets in descending order (LIFO)
 func OPSortTweets(tweets []Tweet) []Tweet {
 	res := make(timeSlice, 0, len(tweets))
 	for _, d := range tweets {
