@@ -84,6 +84,8 @@ func (Storage *storage) GetRandomTweet() ([]Tweet, error) {
 	}
 	return tweets, nil
 }
+
+// GetFollowingTweets - return an array of sorted tweets posted by users in input user's following list
 func (Storage *storage) GetFollowingTweets(username string) ([]Tweet, error) {
 	res := []Tweet{}
 
@@ -104,6 +106,7 @@ func (Storage *storage) GetFollowingTweets(username string) ([]Tweet, error) {
 	return sortedTweets, nil
 }
 
+// SortTweets - input: []Tweet, output: []Tweet sorted by
 func (Storage *storage) SortTweets(tweets []Tweet) []Tweet {
 	res := make(timeSlice, 0, len(tweets))
 	for _, d := range tweets {
