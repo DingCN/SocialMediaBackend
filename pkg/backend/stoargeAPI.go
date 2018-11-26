@@ -166,6 +166,11 @@ func (Storage *storage) CheckIfFollowing(username string, targetname string) (bo
 		err := errorcode.ErrUserNotExist
 		return false, err
 	}
+	pUser, ok = Storage.UserList.Users[targetname]
+	if ok == false {
+		err := errorcode.ErrUserNotExist
+		return false, err
+	}
 	res, ok := pUser.FollowingList[targetname]
 	if ok == true && res == true {
 		return true, nil
