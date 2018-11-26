@@ -12,7 +12,7 @@ service TwitterRPC{
     rpc FollowUnFollowRPC (FollowUnFollowRequest) returns (FollowUnFollowReply){}
     rpc AddTweetRPC (AddTweetRequest) returns (AddTweetReply){}
     rpc GetFollowingTweetsRPC (GetFollowingTweetsRequest) returns (GetFollowingTweetsReply){}
-    rpc GetUserProfile (GetFollowingTweetsRequest) returns (GetFollowingTweetsReply){}
+    rpc GetUserProfileRPC (GetUserProfileRequest) returns (GetUserProfileReply){}
     // rpc GetRandomTweetRPC (GetRandomTweetRequest) returns (GetRandomTweetReply){}
 }
 
@@ -88,7 +88,7 @@ message Timestamp {
     int32 nanos = 2;
   }
 
-  message GetUserProfileRequest{
+message GetUserProfileRequest{
     string username = 1;
 }
 message GetUserProfileReply{
