@@ -46,9 +46,6 @@ type centraltweetlist struct {
 	mutex  sync.Mutex
 }
 
-// TweetList - List storing all tweets post by all users
-var CentralTweetList = centraltweetlist{Tweets: []*Tweet{}}
-
 // Use temporarily to generate unique ID
 var userIDCounter int
 
