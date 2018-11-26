@@ -170,3 +170,24 @@ func (web *Web) FollowUnFollowRPCSend(username string, targetname string) (*prot
 	reply, err := web.c.FollowUnFollowRPC(ctx, &request)
 	return reply, err
 }
+
+func (web *Web) GetFollowingTweetsRPCSend(username string) (*protocol.GetFollowingTweetsReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.GetFollowingTweetsRequest{}
+	request.Username = username
+	reply, err := web.c.GetFollowingTweetsRPC(ctx, &request)
+
+	return reply, err
+}
+
+// convert protoTimestamp to time.Time
+func Timestamp(ts *protocol.Timestamp) time.Time {
+	var t time.Time
+	if ts == nil {
+		t = time.Unix(0, 0).UTC() // treat nil like the empty Timestamp
+	} else {
+		t = time.Unix(ts.Seconds, int64(ts.Nanos)).UTC()
+	}
+	return t
+}

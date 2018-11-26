@@ -118,13 +118,24 @@ func (web *Web) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (web *Web) GetFollowingTweets(username string) ([]Tweet, error) {
+	reply, err := web.GetFollowingTweetsRPCSend(username)
+	res := []Tweet{}
+	if err != nil {
+		return nil, err
+	}
+	for _, tweet := range reply.Tweet {
+		res = append(res, Tweet{UserName: tweet.UserName, Timestamp: Timestamp(tweet.Timestamp), Body: tweet.Body})
+	}
+	return res, err
+}
+
 // Home .
 func (web *Web) Home(w http.ResponseWriter, r *http.Request) {
 	// usernames, ok := r.URL.Query()["username"]
 	cookie, _ := r.Cookie("username")
 	username := cookie.Value
 
-	// Render
 	pUser, ok := UserList.Users[username]
 	if !ok {
 		log.Println("login first to get follower list")
@@ -133,7 +144,10 @@ func (web *Web) Home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	sortedTweets := OPGetFollowingTweets(pUser.UserName)
+	sortedTweets, err := web.GetFollowingTweets(pUser.UserName)
+	if err != nil {
+		log.Println(err)
+	}
 	fmt.Printf("Following post for user: %s found: ", username)
 	for _, tweet := range sortedTweets {
 		fmt.Printf("%s; ", tweet.Body)
