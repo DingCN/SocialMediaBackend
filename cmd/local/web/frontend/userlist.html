@@ -17,7 +17,7 @@
     {{else}}
         <h3>Users following {{.UserName}}</h3>
     {{end}}
-    {{range $k, $_:= .UserList}}
+    {{range $k := .UserList}}
     <div class="user_list">
         <a href="/userprofile?username={{$k}}">
         @{{$k}}

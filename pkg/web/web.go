@@ -395,7 +395,11 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (web *Web) MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
-	tweets, err := web.MomentRandomFeedsRPCSend()
+	reply, err := web.MomentRandomFeedsRPCSend()
+	//DEBUG
+	// for _, tweet := range tweets.TweetList {
+	// 	fmt.Printf("%+v", tweet)
+	// }
 	if err != nil {
 		log.Println(err)
 	}
@@ -403,5 +407,5 @@ func (web *Web) MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	t.Execute(w, tweets)
+	t.Execute(w, reply.TweetList)
 }
