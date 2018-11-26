@@ -46,6 +46,15 @@ func (Storage *storage) GetUser(username string) (*User, error) {
 	return pUser, nil
 }
 
+func (Storage *storage) GetUserProfile(username string) (*User, error) {
+	pUser, ok := Storage.UserList.Users[username]
+	if ok == false {
+		err := errorcode.ErrUserNotExist
+		return nil, err
+	}
+	return pUser, nil
+}
+
 func (Storage *storage) AddTweet(username string, post string) (bool, error) {
 	Storage.CentralTweetList.mutex.Lock()
 	defer Storage.CentralTweetList.mutex.Unlock()
@@ -161,12 +170,12 @@ func (Storage *storage) FollowUnFollow(username string, targetname string) (bool
 }
 
 func (Storage *storage) CheckIfFollowing(username string, targetname string) (bool, error) {
-	pUser, ok := Storage.UserList.Users[username]
+	pUser, ok := Storage.UserList.Users[targetname]
 	if ok == false {
 		err := errorcode.ErrUserNotExist
 		return false, err
 	}
-	pUser, ok = Storage.UserList.Users[targetname]
+	pUser, ok = Storage.UserList.Users[username]
 	if ok == false {
 		err := errorcode.ErrUserNotExist
 		return false, err

@@ -167,6 +167,25 @@ func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFol
 	reply := protocol.GetFollowingTweetsReply{}
 	reply.Username = username
 	tweets, err := s.Storage.GetFollowingTweets(username)
+
+	reply.Success = true
+	return &reply, err
+}
+
+func (s *backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserProfileRequest) (*protocol.GetUserProfileReply, error) {
+	username := in.GetUsername()
+	reply := protocol.GetUserProfileReply{}
+	reply.Username = username
+	pUser, err := s.Storage.GetUserProfile(username)
+	reply.Username = pUser.UserName
+	reply.FollowerList = pUser.FollowerList
+
+	reply.TweetList = pUser.TweetList
+
+}
+
+func (s *backend) ConvertTweetListToProtoTweetList(tweets []Tweet) (protocol.Tweet, error) {
+	res := []protocol.Tweet{}
 	for _, tweet := range tweets {
 		stProtoTweet := protocol.Tweet{}
 		stProtoTweet.UserName = tweet.UserName
@@ -180,11 +199,10 @@ func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFol
 
 		// ts := &timestamp.Timestamp{Seconds: s, Nanos: n}
 
-		reply.Tweet = append(reply.Tweet, &stProtoTweet)
+		res = append(res, &stProtoTweet)
 
 	}
-	reply.Success = true
-	return &reply, err
+	return res, nil
 }
 
 // OPGetRandomTweet()

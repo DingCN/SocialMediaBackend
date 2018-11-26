@@ -192,3 +192,13 @@ func Timestamp(ts *protocol.Timestamp) time.Time {
 	}
 	return t
 }
+
+func (web *Web) GetUserProfileRPCSend(username string) (*protocol.GetUserProfileReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.GetUserProfileRequest{}
+	request.Username = username
+	reply, err := web.c.GetUserProfileRPC(ctx, &request)
+
+	return reply, err
+}
