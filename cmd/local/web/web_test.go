@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,84 +16,6 @@ import (
 )
 
 var addr = "//127.0.0.1:8080"
-
-///////////////////////////////////////////////////////////////////////
-//////////////// module tests starts///////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-// When a user registers, he isn't following any other users.
-// We provide a moment page so that it can get the newest posts even he is not following their owner
-
-//Test for view feeds
-// user only get feeds for those he/she follows
-// ordered by timestamp, new to old
-// Alice follows Bob and Cain, and she only gets feed by these two
-func Test_Home(t *testing.T) {
-	// env set
-	ForTestCreateAccount(t, "Test_HomeAlice", "Test_HomeAlice")
-	ForTestCreateAccount(t, "Test_HomeBob", "Test_HomeBob")
-	ForTestCreateAccount(t, "Test_HomeCain", "Test_HomeCain")
-	ForTestCreateAccount(t, "Test_HomeDoge", "Test_HomeDoge")
-	ForTestFollowUnFollow(t, "Test_HomeAlice", "Test_HomeBob")
-	ForTestFollowUnFollow(t, "Test_HomeAlice", "Test_HomeCain")
-	// Alice is following Bob
-	ForTestCreatePost(t, "Test_HomeBob", "Test_HomeBob's post")
-	ForTestCreatePost(t, "Test_HomeCain", "Test_HomeCain's post")
-	ForTestCreatePost(t, "Test_HomeBob", "Test_HomeBob's post2")
-	ForTestCreatePost(t, "Test_HomeDoge", "Test_HomeDoge's post")
-
-	//module test
-	username := "Test_HomeAlice"
-	pUser, ok := web.UserList.Users[username]
-	if !ok {
-		log.Println("Test home fails")
-	}
-	unsortedTweets := web.OPGetFollowingTweets(pUser.UserName)
-	fmt.Printf("Following post for user: %s found: ", username)
-	for _, tweet := range unsortedTweets {
-		fmt.Printf("%s; ", tweet.Body)
-	}
-	fmt.Printf("\n")
-	sortedTweets := web.OPSortTweets(unsortedTweets)
-	if len(sortedTweets) != 3 || sortedTweets[2].UserName != "Test_HomeBob" || sortedTweets[2].Body != "Test_HomeBob's post" || sortedTweets[1].UserName != "Test_HomeCain" || sortedTweets[1].Body != "Test_HomeCain's post" || sortedTweets[0].UserName != "Test_HomeBob" || sortedTweets[0].Body != "Test_HomeBob's post2" {
-		t.Fatalf("Home(ViewFeeds) incorrect")
-	}
-}
-func Test_UserProfile(t *testing.T) {
-	// env set
-	ForTestCreateAccount(t, "Test_UserProfileAlice", "Test_UserProfileAlice")
-	ForTestCreateAccount(t, "Test_UserProfileBob", "Test_UserProfileBob")
-	ForTestCreateAccount(t, "Test_UserProfileCain", "Test_UserProfileCain")
-	// Alice is following Bob
-	ForTestCreatePost(t, "Test_UserProfileBob", "Test_UserProfileBob's post")
-	ForTestCreatePost(t, "Test_UserProfileCain", "Test_UserProfileCain's post")
-
-	username := "Test_UserProfileBob"
-	// Query()["key"] will return an array of items,
-	// we only want the single item.
-	pUser, _ := web.UserList.Users[username]
-	userProfile := web.UserTmpl{
-		UserName:     username,
-		NumTweets:    len(pUser.TweetList),
-		NumFollowing: len(pUser.FollowingList),
-		NumFollowers: len(pUser.FollowerList),
-		TweetList:    pUser.TweetList,
-	}
-	if userProfile.UserName != "Test_UserProfileBob" || userProfile.NumTweets != 1 || userProfile.TweetList[0].Body != "Test_UserProfileBob's post" {
-		t.Fatalf("UserProfile incorrect")
-	}
-}
-
-///////////////////////////////////////////////////////////////////////
-//////////////// module tests ends/////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////
 //////////////////// End to End tests//////////////////////////////////

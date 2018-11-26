@@ -16,7 +16,7 @@ import (
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
-// pb "google.golang.org/grpc/examples/helloworld/helloworld"
+// run whole file tests only, testing single test cases won't work since we are testing servers
 
 var webSrv = &web.Web{}
 
@@ -35,7 +35,6 @@ func startBackend() {
 	}
 }
 func startWeb() {
-
 	backendAddr := "localhost:50051"
 	conn, err := grpc.Dial(backendAddr, grpc.WithInsecure())
 	if err != nil {
@@ -43,16 +42,14 @@ func startWeb() {
 
 	}
 	webSrv.C = protocol.NewTwitterRPCClient(conn)
-
 }
 func TestStartServer(t *testing.T) {
+	// Starting Web
 	startWeb()
 	// Starting Backend
 	go startBackend()
 }
 func TestSignupRPC(t *testing.T) {
-	//starting Web
-
 	//calling RPC
 	_, err := webSrv.SignupRPCSend("user1", "password1")
 	if err != nil {
@@ -64,9 +61,9 @@ func TestSignupRPC(t *testing.T) {
 	}
 }
 
+// When a user registers, he isn't following any other users.
+// We provide a moment page so that it can get the newest posts even he is not following their owner
 func TestMomentsRPC(t *testing.T) {
-
-	// env set
 	_, err := webSrv.SignupRPCSend("Test_MomentsAlice", "Test_MomentsAlice")
 	if err != nil {
 		t.Fatalf("Moments Incorrect")
@@ -95,5 +92,62 @@ func TestMomentsRPC(t *testing.T) {
 	if len(tweets) != 2 || tweets[1].UserName != "Test_MomentsBob" || tweets[1].Body != "Test_MomentsBob's post" || tweets[0].UserName != "Test_MomentsCain" || tweets[0].Body != "Test_MomentsCain's post" {
 		t.Fatalf("Moments incorrect")
 		fmt.Printf("%+v\n", tweets)
+	}
+}
+
+func TestGetFollowingTweetsRPC(t *testing.T) {
+	webSrv.SignupRPCSend("TestGetFollowingTweetsRPC_Alice", "TestGetFollowingTweetsRPC_Alice")
+	webSrv.SignupRPCSend("TestGetFollowingTweetsRPC_Bob", "TestGetFollowingTweetsRPC_Bob")
+	webSrv.SignupRPCSend("TestGetFollowingTweetsRPC_Cain", "TestGetFollowingTweetsRPC_Cain")
+	webSrv.SignupRPCSend("TestGetFollowingTweetsRPC_Doge", "TestGetFollowingTweetsRPC_Doge")
+	webSrv.FollowUnFollowRPCSend("TestGetFollowingTweetsRPC_Alice", "TestGetFollowingTweetsRPC_Bob")
+	webSrv.FollowUnFollowRPCSend("TestGetFollowingTweetsRPC_Alice", "TestGetFollowingTweetsRPC_Cain")
+	// Alice is following Bob
+	_, err := webSrv.AddTweetRPCSend("TestGetFollowingTweetsRPC_Bob", "TestGetFollowingTweetsRPC_Bob's post")
+	if err != nil {
+		t.Fatalf("AddTweetRPC Incorrect")
+	}
+	_, err = webSrv.AddTweetRPCSend("TestGetFollowingTweetsRPC_Cain", "TestGetFollowingTweetsRPC_Cain's post")
+	if err != nil {
+		t.Fatalf("AddTweetRPC Incorrect")
+	}
+	_, err = webSrv.AddTweetRPCSend("TestGetFollowingTweetsRPC_Bob", "TestGetFollowingTweetsRPC_Bob's post2")
+	if err != nil {
+		t.Fatalf("AddTweetRPC Incorrect")
+	}
+	_, err = webSrv.AddTweetRPCSend("TestGetFollowingTweetsRPC_Doge", "TestGetFollowingTweetsRPC_Doge's post")
+	if err != nil {
+		t.Fatalf("AddTweetRPC Incorrect")
+	}
+
+	//module test
+	reply, err := webSrv.GetFollowingTweetsRPCSend("TestGetFollowingTweetsRPC_Alice")
+	if err != nil {
+		t.Fatalf("TestGetFollowingTweetsRPC incorrect")
+	}
+	tweets := reply.Tweet
+	if len(tweets) != 3 || tweets[2].UserName != "TestGetFollowingTweetsRPC_Bob" || tweets[2].Body != "TestGetFollowingTweetsRPC_Bob's post" || tweets[1].UserName != "TestGetFollowingTweetsRPC_Cain" || tweets[1].Body != "TestGetFollowingTweetsRPC_Cain's post" || tweets[0].UserName != "TestGetFollowingTweetsRPC_Bob" || tweets[0].Body != "TestGetFollowingTweetsRPC_Bob's post2" {
+		t.Fatalf("TestGetFollowingTweetsRPC incorrect")
+	}
+}
+func TestUserProfileRPC(t *testing.T) {
+	webSrv.SignupRPCSend("TestUserProfileRPCAlice", "TestUserProfileRPCAlice")
+	webSrv.SignupRPCSend("TestUserProfileRPC_Bob", "TestUserProfileRPC_Bob")
+	webSrv.SignupRPCSend("TestUserProfileRPC_Cain", "TestUserProfileRPC_Cain")
+	webSrv.SignupRPCSend("TestUserProfileRPC_Doge", "TestUserProfileRPC_Doge")
+	webSrv.FollowUnFollowRPCSend("TestUserProfileRPC_Alice", "TestUserProfileRPC_Bob")
+	webSrv.FollowUnFollowRPCSend("TestUserProfileRPC_Alice", "TestUserProfileRPC_Cain")
+	// Alice is following Bob
+	webSrv.AddTweetRPCSend("TestUserProfileRPC_Bob", "TestUserProfileRPC_Bob's post")
+
+	username := "TestUserProfileRPC_Bob"
+	// Query()["key"] will return an array of items,
+	// we only want the single item.
+	reply, err := webSrv.GetUserProfileRPCSend(username)
+	if err != nil {
+		t.Fatalf("TestUserProfileRPC incorrect")
+	}
+	if reply.Username != "TestUserProfileRPC_Bob" || len(reply.TweetList) != 1 || reply.TweetList[0].Body != "TestUserProfileRPC_Bob's post" {
+		t.Fatalf("UserProfile incorrect")
 	}
 }
