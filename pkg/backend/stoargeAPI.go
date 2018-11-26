@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
+	"github.com/DingCN/SocialMediaBackend/pkg/twitterTimestamp"
 )
 
 // func AddUser(username string, password string) error {
@@ -60,7 +61,8 @@ func (Storage *storage) AddTweet(username string, post string) (bool, error) {
 	defer Storage.CentralTweetList.mutex.Unlock()
 	Storage.UserList.mutex.Lock()
 	defer Storage.UserList.mutex.Unlock()
-	timestamp := time.Now()
+	go_time := time.Now()
+	timestamp := *twitterTimestamp.TimestampProto(go_time)
 	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
 	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, &tweet)
 	pUser, ok := Storage.UserList.Users[username]

@@ -2,7 +2,8 @@ package backend
 
 import (
 	"sync"
-	"time"
+
+	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
 var MaxFeedsNum int = 20
@@ -31,7 +32,7 @@ type User struct {
 type Tweet struct {
 	//userID    string
 	UserName  string
-	Timestamp time.Time
+	Timestamp protocol.Timestamp
 	Body      string
 }
 
@@ -56,6 +57,7 @@ type centraltweetlist struct {
 // Use temporarily to generate unique ID
 var userIDCounter int
 
+// sort time
 /// https://stackoverflow.com/questions/23121026/sorting-by-time-time-in-golang
 type timeSlice []Tweet
 
@@ -66,7 +68,10 @@ func (p timeSlice) Len() int {
 
 // Define compare
 func (p timeSlice) Less(i, j int) bool {
-	return p[i].Timestamp.After(p[j].Timestamp)
+	if p[i].Timestamp.Seconds > p[j].Timestamp.Seconds || p[i].Timestamp.Nanos > p[j].Timestamp.Nanos {
+		return true
+	}
+	return false
 }
 
 // Define swap over an array
