@@ -27,7 +27,7 @@ func (web *Web) SignupRPCSend(username string, password string) (*protocol.Signu
 	request := protocol.SignupRequest{}
 	request.Username = username
 	request.Password = password
-	reply, err := web.c.SignupRPC(ctx, &request)
+	reply, err := web.C.SignupRPC(ctx, &request)
 	return reply, err
 }
 
@@ -37,7 +37,7 @@ func (web *Web) LoginRPCSend(username string, password string) (*protocol.LoginR
 	request := protocol.LoginRequest{}
 	request.Username = username
 	request.Password = password
-	reply, err := web.c.LoginRPC(ctx, &request)
+	reply, err := web.C.LoginRPC(ctx, &request)
 	return reply, err
 }
 
@@ -47,7 +47,7 @@ func (web *Web) AddTweetRPCSend(username string, post string) (*protocol.AddTwee
 	request := protocol.AddTweetRequest{}
 	request.Username = username
 	request.Post = post
-	reply, err := web.c.AddTweetRPC(ctx, &request)
+	reply, err := web.C.AddTweetRPC(ctx, &request)
 	return reply, err
 }
 
@@ -57,7 +57,7 @@ func (web *Web) FollowUnFollowRPCSend(username string, targetname string) (*prot
 	request := protocol.FollowUnFollowRequest{}
 	request.Username = username
 	request.Targetname = targetname
-	reply, err := web.c.FollowUnFollowRPC(ctx, &request)
+	reply, err := web.C.FollowUnFollowRPC(ctx, &request)
 	return reply, err
 }
 
@@ -66,7 +66,7 @@ func (web *Web) GetFollowingTweetsRPCSend(username string) (*protocol.GetFollowi
 	defer cancel()
 	request := protocol.GetFollowingTweetsRequest{}
 	request.Username = username
-	reply, err := web.c.GetFollowingTweetsRPC(ctx, &request)
+	reply, err := web.C.GetFollowingTweetsRPC(ctx, &request)
 
 	return reply, err
 }
@@ -76,7 +76,7 @@ func (web *Web) GetUserProfileRPCSend(username string) (*protocol.GetUserProfile
 	defer cancel()
 	request := protocol.GetUserProfileRequest{}
 	request.Username = username
-	reply, err := web.c.GetUserProfileRPC(ctx, &request)
+	reply, err := web.C.GetUserProfileRPC(ctx, &request)
 
 	return reply, err
 }
@@ -85,6 +85,6 @@ func (web *Web) MomentRandomFeedsRPCSend() (*protocol.MomentRandomFeedsReply, er
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	request := protocol.MomentRandomFeedsRequest{}
-	reply, err := web.c.MomentRandomFeedsRPC(ctx, &request)
+	reply, err := web.C.MomentRandomFeedsRPC(ctx, &request)
 	return reply, err
 }

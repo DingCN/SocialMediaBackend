@@ -17,15 +17,15 @@ import (
 
 // Web server
 type Web struct {
-	srv *http.Server
+	Srv *http.Server
 	//client handle when comm with backend
-	c protocol.TwitterRPCClient
+	C protocol.TwitterRPCClient
 }
 
 // New config
 func New(cfg *Config) (*Web, error) {
 	return &Web{
-		srv: &http.Server{
+		Srv: &http.Server{
 			Addr: cfg.Addr,
 		},
 	}, nil
@@ -41,7 +41,7 @@ func (web *Web) Start() error {
 
 	}
 	defer conn.Close()
-	web.c = protocol.NewTwitterRPCClient(conn)
+	web.C = protocol.NewTwitterRPCClient(conn)
 
 	// Contact the backend and print out its response.
 
@@ -69,7 +69,7 @@ func (web *Web) Start() error {
 }
 
 func (web *Web) Shutdown(ctx context.Context) error {
-	return web.srv.Shutdown(ctx)
+	return web.Srv.Shutdown(ctx)
 }
 
 // Index .

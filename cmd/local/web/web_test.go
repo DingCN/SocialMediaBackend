@@ -24,20 +24,6 @@ var addr = "//127.0.0.1:8080"
 
 // When a user registers, he isn't following any other users.
 // We provide a moment page so that it can get the newest posts even he is not following their owner
-func Test_Moments(t *testing.T) {
-	// env set
-	ForTestCreateAccount(t, "Test_MomentsAlice", "Test_MomentsAlice")
-	ForTestCreateAccount(t, "Test_MomentsBob", "Test_MomentsBob")
-	ForTestCreateAccount(t, "Test_MomentsCain", "Test_MomentsCain")
-	ForTestCreatePost(t, "Test_MomentsBob", "Test_MomentsBob's post")
-	ForTestCreatePost(t, "Test_MomentsCain", "Test_MomentsCain's post")
-
-	tweets := web.OPGetRandomTweet()
-	if len(tweets) != 2 || tweets[1].UserName != "Test_MomentsBob" || tweets[1].Body != "Test_MomentsBob's post" || tweets[0].UserName != "Test_MomentsCain" || tweets[0].Body != "Test_MomentsCain's post" {
-		t.Fatalf("Moments incorrect")
-		fmt.Printf("%+v\n", tweets)
-	}
-}
 
 //Test for view feeds
 // user only get feeds for those he/she follows

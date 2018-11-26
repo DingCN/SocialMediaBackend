@@ -1,46 +1,99 @@
 package main
 
 import (
-	"context"
-	"os"
+	"fmt"
+	"log"
+	"net"
 	"testing"
-	"time"
 
+	"github.com/DingCN/SocialMediaBackend/pkg/backend"
+	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
 	"github.com/DingCN/SocialMediaBackend/pkg/web"
 
-	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
 // pb "google.golang.org/grpc/examples/helloworld/helloworld"
+
+var webSrv = &web.Web{}
+
+func startBackend() {
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	backend, _ := backend.New()
+	s := grpc.NewServer()
+	protocol.RegisterTwitterRPCServer(s, backend)
+	// Register reflection service on gRPC server.
+	reflection.Register(s)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+func startWeb() {
+
+	backendAddr := "localhost:50051"
+	conn, err := grpc.Dial(backendAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("web adn backend did not connect: %v", err)
+
+	}
+	webSrv.C = protocol.NewTwitterRPCClient(conn)
+
+}
+func TestStartServer(t *testing.T) {
+	startWeb()
+	// Starting Backend
+	go startBackend()
+}
 func TestSignupRPC(t *testing.T) {
-	cfg := &web.Config{
-		Addr: os.Getenv("HOST"),
-		// MaxFeedsNum: 3,
-	}
+	//starting Web
 
-	webSrv, err := web.New(cfg)
+	//calling RPC
+	_, err := webSrv.SignupRPCSend("user1", "password1")
 	if err != nil {
-		panic(err)
+		t.Fatalf("Signup Incorrect")
 	}
+	_, err = webSrv.SignupRPCSend("user1", "password1")
+	if err.Error() != errorcode.ErrUsernameTaken.Error() {
+		t.Fatalf("Signup Incorrect")
+	}
+}
 
-	err = webSrv.Start()
-	if err != nil {
-		panic(err)
-	}
+func TestMomentsRPC(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	request := protocol.SignupRequest{}
-	request.Username = "user1"
-	request.Password = "password1"
-	reply, err := web.c.SignupRPC(ctx, &request)
+	// env set
+	_, err := webSrv.SignupRPCSend("Test_MomentsAlice", "Test_MomentsAlice")
 	if err != nil {
-		t.Fatalf("Signup incorrect")
+		t.Fatalf("Moments Incorrect")
 	}
-	reply, err := web.c.SignupRPC(ctx, &request)
-	if err.Error() != errorcode.ErrUsernameTaken {
-		t.Fatalf("Signup incorrect")
+	_, err = webSrv.SignupRPCSend("Test_MomentsBob", "Test_MomentsBob")
+	if err != nil {
+		t.Fatalf("Moments Incorrect")
+	}
+	_, err = webSrv.SignupRPCSend("Test_MomentsCain", "Test_MomentsCain")
+	if err != nil {
+		t.Fatalf("Moments Incorrect")
+	}
+	_, err = webSrv.AddTweetRPCSend("Test_MomentsBob", "Test_MomentsBob's post")
+	if err != nil {
+		t.Fatalf("Moments Incorrect")
+	}
+	_, err = webSrv.AddTweetRPCSend("Test_MomentsCain", "Test_MomentsCain's post")
+	if err != nil {
+		t.Fatalf("Moments Incorrect")
+	}
+	reply, err := webSrv.MomentRandomFeedsRPCSend()
+	if err != nil {
+		t.Fatalf("Moments Incorrect")
+	}
+	tweets := reply.TweetList
+	if len(tweets) != 2 || tweets[1].UserName != "Test_MomentsBob" || tweets[1].Body != "Test_MomentsBob's post" || tweets[0].UserName != "Test_MomentsCain" || tweets[0].Body != "Test_MomentsCain's post" {
+		t.Fatalf("Moments incorrect")
+		fmt.Printf("%+v\n", tweets)
 	}
 }
