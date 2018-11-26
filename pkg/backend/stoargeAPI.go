@@ -185,3 +185,16 @@ func (Storage *storage) CheckIfFollowing(username string, targetname string) (bo
 	}
 	return false, nil
 }
+
+func (Storage *storage) MomentRandomFeeds() []Tweet {
+	var count int = 0
+	tweets := []Tweet{}
+	for i := len(Storage.CentralTweetList.Tweets) - 1; i >= 0; i-- {
+		tweets = append(tweets, *Storage.CentralTweetList.Tweets[i])
+		count++
+		if count >= 20 { ///////////////////////////////////////////////////////////////////////TODO add to config
+			return tweets
+		}
+	}
+	return tweets
+}

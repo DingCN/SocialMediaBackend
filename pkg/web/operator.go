@@ -2,8 +2,6 @@ package web
 
 import (
 	"context"
-	"fmt"
-	"sort"
 	"time"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
@@ -22,114 +20,6 @@ import (
 // 	reply.Success = true
 // 	return reply, nil
 // }
-func OPAddUser(username string, password string) bool {
-	UserList.mutex.Lock()
-	defer UserList.mutex.Unlock()
-	UserList.Users[username] = &User{UserName: username, Password: password, FollowingList: map[string]bool{}, FollowerList: map[string]bool{}}
-	return true
-}
-
-func OPGetUser(username string) *User {
-	return UserList.Users[username]
-}
-
-func OPAddTweet(username string, post string) bool {
-	CentralTweetList.mutex.Lock()
-	defer CentralTweetList.mutex.Unlock()
-	UserList.mutex.Lock()
-	defer UserList.mutex.Unlock()
-	timestamp := time.Now()
-	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
-	CentralTweetList.Tweets = append(CentralTweetList.Tweets, &tweet)
-	UserList.Users[username].TweetList = append(UserList.Users[username].TweetList, tweet)
-	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
-	return true
-}
-
-func OPGetTweetByUsername(username string) []Tweet {
-	return UserList.Users[username].TweetList
-}
-func OPGetRandomTweet() []Tweet {
-	var count int = 0
-	tweets := []Tweet{}
-	for i := len(CentralTweetList.Tweets) - 1; i >= 0; i-- {
-		tweets = append(tweets, *CentralTweetList.Tweets[i])
-		count++
-		if count >= MaxFeedsNum { ///////////////////////////////////////////////////////////////////////TODO add to config
-			return tweets
-		}
-	}
-	return tweets
-}
-func OPGetFollowingTweets(username string) []Tweet {
-	res := []Tweet{}
-	followings := OPGetAllFollowing(username)
-	for _, username := range followings {
-		res = append(res, UserList.Users[username].TweetList...) // ... lets you pass multiple arguments to a variadic function from a slice
-	}
-	// log
-	sortedTweets := OPSortTweets(res)
-	return sortedTweets
-}
-
-func OPSortTweets(tweets []Tweet) []Tweet {
-	res := make(timeSlice, 0, len(tweets))
-	for _, d := range tweets {
-		res = append(res, d)
-	}
-
-	sort.Sort(res)
-	return res
-}
-
-func OPGetAllFollowing(username string) []string {
-	followings := UserList.Users[username].FollowingList
-	returnList := []string{}
-	for followingname, isFollowing := range followings {
-		if isFollowing == true {
-			returnList = append(returnList, followingname)
-			fmt.Printf("user:%s 's following found: %s\n", username, followingname)
-
-		}
-	}
-	return returnList
-}
-
-func OPFollowUnFollow(username string, targetname string) bool {
-	res, ok := UserList.Users[username].FollowingList[targetname]
-	if ok == true && res == true {
-		//already following, set UnFollow by deleting it instead
-		delete(UserList.Users[username].FollowingList, targetname)
-		delete(UserList.Users[targetname].FollowerList, username)
-
-		// UserList.Users[username].FollowingList[targetname] = false
-		// UserList.Users[targetname].FollowerList[username] = false
-		fmt.Printf("%s just unfollowed %s\n", username, targetname)
-	} else {
-		//set Follow
-		UserList.Users[username].FollowingList[targetname] = true
-		UserList.Users[targetname].FollowerList[username] = true
-		fmt.Printf("%s just followed %s\n", username, targetname)
-
-	}
-	return true
-}
-
-func OPCheckIfFollowing(username string, targetname string) bool {
-	res, ok := UserList.Users[username].FollowingList[targetname]
-	if ok == true && res == true {
-		return true
-	}
-	return false
-}
-
-func OPGetAllUsers() []string {
-	var res []string
-	for username, _ := range UserList.Users {
-		res = append(res, username)
-	}
-	return res
-}
 
 func (web *Web) SignupRPCSend(username string, password string) (*protocol.SignupReply, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -181,17 +71,6 @@ func (web *Web) GetFollowingTweetsRPCSend(username string) (*protocol.GetFollowi
 	return reply, err
 }
 
-// convert protoTimestamp to time.Time
-func Timestamp(ts *protocol.Timestamp) time.Time {
-	var t time.Time
-	if ts == nil {
-		t = time.Unix(0, 0).UTC() // treat nil like the empty Timestamp
-	} else {
-		t = time.Unix(ts.Seconds, int64(ts.Nanos)).UTC()
-	}
-	return t
-}
-
 func (web *Web) GetUserProfileRPCSend(username string) (*protocol.GetUserProfileReply, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -199,5 +78,13 @@ func (web *Web) GetUserProfileRPCSend(username string) (*protocol.GetUserProfile
 	request.Username = username
 	reply, err := web.c.GetUserProfileRPC(ctx, &request)
 
+	return reply, err
+}
+
+func (web *Web) MomentRandomFeedsRPCSend() (*protocol.MomentRandomFeedsReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.MomentRandomFeedsRequest{}
+	reply, err := web.c.MomentRandomFeedsRPC(ctx, &request)
 	return reply, err
 }

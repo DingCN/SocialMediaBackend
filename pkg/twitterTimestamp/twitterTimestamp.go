@@ -44,3 +44,14 @@ func TimestampProto(t time.Time) *protocol.Timestamp {
 	}
 	return ts
 }
+
+// convert protoTimestamp to time.Time
+func Timestamp(ts *protocol.Timestamp) time.Time {
+	var t time.Time
+	if ts == nil {
+		t = time.Unix(0, 0).UTC() // treat nil like the empty Timestamp
+	} else {
+		t = time.Unix(ts.Seconds, int64(ts.Nanos)).UTC()
+	}
+	return t
+}

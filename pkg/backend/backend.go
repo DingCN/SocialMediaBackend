@@ -3,6 +3,7 @@ package backend
 
 import (
 	"context"
+	"log"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
@@ -183,3 +184,17 @@ func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool)
 }
 
 // OPGetRandomTweet()
+func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
+
+	reply := &protocol.MomentRandomFeedsReply{}
+	tweetlist := s.Storage.MomentRandomFeeds()
+	protoTweetList, err := s.ConvertTweetListToProtoTweetList(tweetlist)
+	if err != nil {
+		log.Println(err)
+	}
+	reply.TweetList = protoTweetList
+
+	reply.Success = true
+	return reply, nil
+
+}

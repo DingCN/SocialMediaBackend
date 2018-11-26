@@ -118,16 +118,17 @@ func (web *Web) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (web *Web) GetFollowingTweets(username string) ([]Tweet, error) {
+func (web *Web) GetFollowingTweets(username string) ([]*protocol.Tweet, error) {
 	reply, err := web.GetFollowingTweetsRPCSend(username)
-	res := []Tweet{}
 	if err != nil {
 		return nil, err
 	}
-	for _, tweet := range reply.Tweet {
-		res = append(res, Tweet{UserName: tweet.UserName, Timestamp: Timestamp(tweet.Timestamp), Body: tweet.Body})
-	}
-	return res, err
+	// res := []Tweet{}
+	// for _, tweet := range reply.Tweet {
+	// 	res = append(res, Tweet{UserName: tweet.UserName, Timestamp: *tweet.Timestamp, Body: tweet.Body})
+	// }
+	// return res, err
+	return reply.Tweet, err
 }
 
 // Home .
@@ -136,23 +137,24 @@ func (web *Web) Home(w http.ResponseWriter, r *http.Request) {
 	cookie, _ := r.Cookie("username")
 	username := cookie.Value
 
-	pUser, ok := UserList.Users[username]
-	if !ok {
-		log.Println("login first to get follower list")
+	pUser, err := web.GetUserProfileRPCSend(username)
+	if err != nil {
+		log.Println(err)
 	}
 	h, err := template.ParseFiles("frontend/home.html")
 	if err != nil {
 		panic(err)
 	}
-	sortedTweets, err := web.GetFollowingTweets(pUser.UserName)
+	sortedTweets, err := web.GetFollowingTweets(pUser.Username)
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Printf("Following post for user: %s found: ", username)
+	fmt.Printf("Following post for user: %s found: ", pUser.Username)
 	for _, tweet := range sortedTweets {
 		fmt.Printf("%s; ", tweet.Body)
 	}
 	fmt.Printf("\n")
+
 	userHome := UserTmpl{
 		UserName:     username,
 		NumTweets:    len(pUser.TweetList),
@@ -248,8 +250,11 @@ func (web *Web) GetAllFollowing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	username := usernames[0]
-
-	followings := UserList.Users[username].FollowingList
+	pUser, err := web.GetUserProfileRPCSend(username)
+	if err != nil {
+		log.Println(err)
+	}
+	followings := pUser.FollowingList
 	//TODO render
 	//json.NewEncoder(w).Encode(followings)
 	t, err := template.ParseFiles("frontend/userlist.html")
@@ -276,8 +281,12 @@ func (web *Web) GetAllFollower(w http.ResponseWriter, r *http.Request) {
 	}
 	username := usernames[0]
 
-	followers := UserList.Users[username].FollowerList
-	//TODO render
+	pUser, err := web.GetUserProfileRPCSend(username)
+	if err != nil {
+		log.Println(err)
+	}
+	followers := pUser.FollowerList
+
 	t, err := template.ParseFiles("frontend/userlist.html")
 	if err != nil {
 		panic(err)
@@ -366,7 +375,10 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 	username := usernames[0]
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
-	pUser, ok := UserList.Users[username]
+	pUser, err := web.GetUserProfileRPCSend(username)
+	if err != nil {
+		log.Println(err)
+	}
 	h, err := template.ParseFiles("frontend/userprofile.html")
 	if err != nil {
 		panic(err)
@@ -383,7 +395,10 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (web *Web) MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
-	tweets := OPGetRandomTweet()
+	tweets, err := web.MomentRandomFeedsRPCSend()
+	if err != nil {
+		log.Println(err)
+	}
 	t, err := template.ParseFiles("frontend/moments.html")
 	if err != nil {
 		panic(err)
