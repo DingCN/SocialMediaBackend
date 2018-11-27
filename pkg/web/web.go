@@ -149,6 +149,8 @@ func (web *Web) Home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	sortedTweetTmpl := TweetListToTweetTmpl(sortedTweets)
+
 	fmt.Printf("Following post for user: %s found: ", pUser.Username)
 	for _, tweet := range sortedTweets {
 		fmt.Printf("%s; ", tweet.Body)
@@ -160,7 +162,7 @@ func (web *Web) Home(w http.ResponseWriter, r *http.Request) {
 		NumTweets:    len(pUser.TweetList),
 		NumFollowing: len(pUser.FollowingList),
 		NumFollowers: len(pUser.FollowerList),
-		TweetList:    sortedTweets,
+		TweetList:    sortedTweetTmpl,
 	}
 	err = h.Execute(w, userHome)
 	if err != nil {
@@ -399,12 +401,15 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	newTweetList := TweetListToTweetTmpl(pUser.TweetList)
+
 	userProfile := UserTmpl{
 		UserName:     targetUser,
 		NumTweets:    len(pUser.TweetList),
 		NumFollowing: len(pUser.FollowingList),
 		NumFollowers: len(pUser.FollowerList),
-		TweetList:    pUser.TweetList,
+		TweetList:    newTweetList,
 		IsFollowing:  isFollowingTarget,
 		NotSelf:      NotSelf,
 	}
