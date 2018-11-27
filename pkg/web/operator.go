@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
@@ -28,6 +29,9 @@ func (web *Web) SignupRPCSend(username string, password string) (*protocol.Signu
 	request.Username = username
 	request.Password = password
 	reply, err := web.C.SignupRPC(ctx, &request)
+	if err != nil {
+		fmt.Println("%+v", err)
+	}
 	return reply, err
 }
 

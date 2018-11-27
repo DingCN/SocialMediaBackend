@@ -36,7 +36,7 @@ func (web *Web) Start() error {
 	backendAddr := "localhost:50051"
 	conn, err := grpc.Dial(backendAddr, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("web adn backend did not connect: %v", err)
+		log.Fatalf("web and backend did not connect: %v", err)
 		return err
 
 	}
@@ -214,6 +214,8 @@ func (web *Web) CreateAccount(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		t.Execute(w, "Cannot signup, username already taken")
+	} else {
+		log.Panicln(err)
 	}
 }
 
