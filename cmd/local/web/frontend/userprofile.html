@@ -33,7 +33,12 @@
             </p>
             <p>
                 <form action="/FollowOrUnfollow?username={{.UserName}}" method="POST">
-                    <input type="submit" name="follow" value="Follow">
+                    {{if .Isfollowing}}
+                        <input type="submit" name="follow" value="Follow">
+                    {{else}}
+                        <input type="submit" name="follow" value="Unfollow">
+                    {{end}}
+
                 </form>
             </p>
         </div>                                
