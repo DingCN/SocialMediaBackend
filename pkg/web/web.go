@@ -385,7 +385,10 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		isFollowingTarget = reply.IsFollowing
 	}
-
+	NotSelf := true
+	if username == targetUser {
+		NotSelf = false
+	}
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
 	pUser, err := web.GetUserProfileRPCSend(targetUser)
@@ -397,12 +400,13 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	userProfile := UserTmpl{
-		UserName:     username,
+		UserName:     targetUser,
 		NumTweets:    len(pUser.TweetList),
 		NumFollowing: len(pUser.FollowingList),
 		NumFollowers: len(pUser.FollowerList),
 		TweetList:    pUser.TweetList,
 		IsFollowing:  isFollowingTarget,
+		NotSelf:      NotSelf,
 	}
 	h.Execute(w, userProfile)
 
