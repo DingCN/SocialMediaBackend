@@ -58,6 +58,7 @@ type UserTmpl struct {
 	NumFollowers int
 	TweetList    []*protocol.Tweet
 	IsFollowing  bool
+	NotSelf      bool
 }
 
 type UserListTmpl struct {
