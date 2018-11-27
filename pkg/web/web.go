@@ -366,16 +366,29 @@ func (web *Web) CreatePost(w http.ResponseWriter, r *http.Request) {
 // Usage modification: change to view another user's profile page
 func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 	//https://golangcode.com/get-a-url-parameter-from-a-request/
-	usernames, ok := r.URL.Query()["username"]
-
-	if !ok || len(usernames[0]) < 1 {
+	targetUsers, ok := r.URL.Query()["username"]
+	if !ok || len(targetUsers[0]) < 1 {
 		log.Println("Url Param 'username' is missing")
 		return
 	}
-	username := usernames[0]
+	targetUser := targetUsers[0]
+
+	cookie, _ := r.Cookie("username")
+	username := cookie.Value
+	var isFollowingTarget bool
+	if cookie == nil { // unlogged in
+		isFollowingTarget = false
+	} else {
+		reply, err := web.CheckIfFollowingRPCSend(username, targetUser)
+		if err != nil {
+			log.Println(err)
+		}
+		isFollowingTarget = reply.IsFollowing
+	}
+
 	// Query()["key"] will return an array of items,
 	// we only want the single item.
-	pUser, err := web.GetUserProfileRPCSend(username)
+	pUser, err := web.GetUserProfileRPCSend(targetUser)
 	if err != nil {
 		log.Println(err)
 	}
@@ -389,6 +402,7 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 		NumFollowing: len(pUser.FollowingList),
 		NumFollowers: len(pUser.FollowerList),
 		TweetList:    pUser.TweetList,
+		IsFollowing:  isFollowingTarget,
 	}
 	h.Execute(w, userProfile)
 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,10 +14,38 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DingCN/SocialMediaBackend/pkg/backend"
+	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 	"github.com/DingCN/SocialMediaBackend/pkg/web"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var addr = "//127.0.0.1:8080"
+
+func startBackend() {
+	lis, err := net.Listen("tcp", backend.port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	backend, _ := backend.New()
+	s := grpc.NewServer()
+	protocol.RegisterTwitterRPCServer(s, backend)
+	// Register reflection service on gRPC server.
+	reflection.Register(s)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+func startWeb() {
+	backendAddr := "localhost:50051"
+	conn, err := grpc.Dial(backendAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("web adn backend did not connect: %v", err)
+
+	}
+	webSrv.C = protocol.NewTwitterRPCClient(conn)
+}
 
 ///////////////////////////////////////////////////////////////////////
 //////////////////// End to End tests//////////////////////////////////

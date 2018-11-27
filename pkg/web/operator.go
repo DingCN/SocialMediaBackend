@@ -88,3 +88,13 @@ func (web *Web) MomentRandomFeedsRPCSend() (*protocol.MomentRandomFeedsReply, er
 	reply, err := web.C.MomentRandomFeedsRPC(ctx, &request)
 	return reply, err
 }
+
+func (web *Web) CheckIfFollowingRPCSend(username string, targetname string) (*protocol.CheckIfFollowingReply, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	request := protocol.CheckIfFollowingRequest{}
+	request.Username = username
+	request.Targetname = targetname
+	reply, err := web.C.CheckIfFollowingRPC(ctx, &request)
+	return reply, err
+}

@@ -198,3 +198,11 @@ func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentR
 	return reply, nil
 
 }
+
+func (s *backend) CheckIfFollowingRPC(ctx context.Context, in *protocol.CheckIfFollowingRequest) (*protocol.CheckIfFollowingReply, error) {
+	username := in.Username
+	targetname := in.Targetname
+	reply := &protocol.CheckIfFollowingReply{}
+	reply.IsFollowing, _ = s.Storage.CheckIfFollowing(username, targetname)
+	return reply, nil
+}

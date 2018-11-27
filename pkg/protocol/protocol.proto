@@ -14,6 +14,8 @@ service TwitterRPC{
     rpc GetFollowingTweetsRPC (GetFollowingTweetsRequest) returns (GetFollowingTweetsReply){}
     rpc GetUserProfileRPC (GetUserProfileRequest) returns (GetUserProfileReply){}
     rpc MomentRandomFeedsRPC (MomentRandomFeedsRequest) returns (MomentRandomFeedsReply){}
+    rpc CheckIfFollowingRPC (CheckIfFollowingRequest) returns (CheckIfFollowingReply){}
+
 }
 
 message SignupRequest{
@@ -104,4 +106,13 @@ message MomentRandomFeedsRequest{
 message MomentRandomFeedsReply{
     repeated Tweet tweetList = 1;
     bool success = 2;
+}
+
+
+message CheckIfFollowingRequest{
+    string username = 1;
+    string targetname = 2;
+}
+message CheckIfFollowingReply{
+    bool IsFollowing = 1;
 }
