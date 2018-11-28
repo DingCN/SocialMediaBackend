@@ -17,6 +17,9 @@ const (
 	maxValidSeconds = 253402300800
 )
 
+// validateTimestamp is copied from "google/protobuf/timestamp.proto"
+// should have imported this pkg, but failed to set the environment correctly
+// so now I'm rewriting the function and using my own Timestamp struct instead
 func validateTimestamp(ts *protocol.Timestamp) error {
 	if ts == nil {
 		return errors.New("timestamp: nil Timestamp")
@@ -32,6 +35,10 @@ func validateTimestamp(ts *protocol.Timestamp) error {
 	}
 	return nil
 }
+
+// TimestampProto is copied from "google/protobuf/timestamp.proto"
+// should have imported this pkg, but failed to set the environment correctly
+// so now I'm rewriting the function and using my own Timestamp struct instead
 func TimestampProto(t time.Time) *protocol.Timestamp {
 	seconds := t.Unix()
 	nanos := int32(t.Sub(time.Unix(seconds, 0)))
@@ -45,7 +52,10 @@ func TimestampProto(t time.Time) *protocol.Timestamp {
 	return ts
 }
 
-// convert protoTimestamp to time.Time
+// Timestamp convert protoTimestamp to time.Time
+// we store protoTimestamp in our storage, but when frontend is displaying time,
+// this function will be called to convert protoTimestamp to time.Time in golang,
+// time.Time is then converted to readable time and date in front-end implementation.
 func Timestamp(ts *protocol.Timestamp) time.Time {
 	var t time.Time
 	if ts == nil {

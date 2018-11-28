@@ -9,21 +9,16 @@ import (
 	"github.com/DingCN/SocialMediaBackend/pkg/twitterTimestamp"
 )
 
-// func AddUser(username string, password string) error {
-// 	var err error
-// 	UserList.mutex.Lock()
-// 	defer UserList.mutex.Unlock()
-// 	UserList.Users[username] = &User{UserName: username, Password: password, FollowingList: map[string]bool{}, FollowerList: map[string]bool{}}
-// 	return err
-// }
+// AddUser register a user and his password to database
 func (Storage *storage) AddUser(username string, password string) (bool, error) {
 	Storage.UserList.mutex.Lock()
 	defer Storage.UserList.mutex.Unlock()
-
+	// username cannot be empty
 	if len(username) < 1 {
 		err := errorcode.ErrInvalidUsername
 		return false, err
 	}
+	// password length cannot be less than 6
 	if len(password) < 6 {
 		err := errorcode.ErrInvalidPassword
 		return false, err
@@ -37,6 +32,15 @@ func (Storage *storage) AddUser(username string, password string) (bool, error) 
 	Storage.UserList.Users[username] = &User{UserName: username, Password: password, FollowingList: map[string]bool{}, FollowerList: map[string]bool{}}
 	return true, nil
 }
+
+// GetUser takes a username and returns a User struct, containing:
+// UserID           int
+// UserName         string
+// Password         string
+// Auth             string
+// TweetList        []Tweet
+// FollowingList    map[string]bool
+// FollowerList     map[string]bool
 
 func (Storage *storage) GetUser(username string) (*User, error) {
 	pUser, ok := Storage.UserList.Users[username]

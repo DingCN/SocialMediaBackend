@@ -102,29 +102,6 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 	return &reply, err
 }
 
-// OPGetFollowingTweets(pUser.UserName)
-// func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {
-// 	username := in.GetUsername()
-// 	password := in.GetPassword()
-// 	reply := protocol.GetFollowingTweetsReply{}
-// 	reply.Username = username
-
-// 	pUser, err := s.Storage.GetUser(username)
-// 	if err != nil {
-
-// 		reply.Success = false
-// 		return &reply, err
-// 	}
-// 	if pUser.Password != password {
-// 		err := errorcode.ErrIncorrectPassword
-// 		reply.Success = false
-// 		return &reply, err
-// 	}
-
-// 	reply.Success = true
-// 	return &reply, nil
-// }
-
 func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {
 	username := in.GetUsername()
 	reply := protocol.GetFollowingTweetsReply{}
@@ -174,7 +151,9 @@ func (s *backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.
 	return res, nil
 }
 
-// Both Following and Follower list
+// We store the following list and follower list of a user in map[string]bool to ensure O(1) for checking if user is following another user
+// ConvertFollowListToProtoFollowList convert a map struct of follower list to a []string struct for displaying by front-end
+// This function converts both Following list and Follower list
 func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool) ([]string, error) {
 	res := []string{}
 	for user, _ := range followList {
@@ -183,7 +162,7 @@ func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool)
 	return res, nil
 }
 
-// OPGetRandomTweet()
+// MomentRandomFeedsRPC is used for Moments feature
 func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
 
 	reply := &protocol.MomentRandomFeedsReply{}
@@ -199,6 +178,7 @@ func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentR
 
 }
 
+// CheckIfFollowingRPC checks if user is following a target user
 func (s *backend) CheckIfFollowingRPC(ctx context.Context, in *protocol.CheckIfFollowingRequest) (*protocol.CheckIfFollowingReply, error) {
 	username := in.Username
 	targetname := in.Targetname

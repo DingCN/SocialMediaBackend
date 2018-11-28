@@ -51,12 +51,17 @@ var userIDCounter int
 
 // Render Template Helpers
 // func renderTemplate(w http.ResponseWriter, tmplname string, te)
+type TweetTmpl struct {
+	UserName  string
+	Timestamp string
+	Body      string
+}
 type UserTmpl struct {
 	UserName     string
 	NumTweets    int
 	NumFollowing int
 	NumFollowers int
-	TweetList    []*protocol.Tweet
+	TweetList    []TweetTmpl
 	IsFollowing  bool
 	NotSelf      bool
 }

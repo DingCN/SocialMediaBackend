@@ -1,18 +1,12 @@
 package web
 
 import (
-<<<<<<< HEAD
 	"context"
-	"fmt"
-=======
->>>>>>> new_timestamp
 	"time"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
-	"github.com/DingCN/SocialMediaBackend/pkg/twitterTimestamp"
 )
 
-<<<<<<< HEAD
 // func RPCAddUser(ctx context.Context, in protocol.SignupRequest) (protocol.SignupReply, error) {
 // 	username := in.GetUsername()
 // 	password := in.GetPassword()
@@ -34,9 +28,6 @@ func (web *Web) SignupRPCSend(username string, password string) (*protocol.Signu
 	request.Username = username
 	request.Password = password
 	reply, err := web.C.SignupRPC(ctx, &request)
-	if err != nil {
-		fmt.Println("%+v", err)
-	}
 	return reply, err
 }
 
@@ -106,27 +97,4 @@ func (web *Web) CheckIfFollowingRPCSend(username string, targetname string) (*pr
 	request.Targetname = targetname
 	reply, err := web.C.CheckIfFollowingRPC(ctx, &request)
 	return reply, err
-=======
-// TweetTimeConvert - convert Tweet type to TweetTmpl type to suit
-// correct timestamp display format
-func TweetTimeConvert(tweet *protocol.Tweet) TweetTmpl {
-	newTime := twitterTimestamp.Timestamp(tweet.Timestamp)
-	newTimeString := newTime.Add(time.Hour * (-5)).Format("2006-01-02 15:04:05")
-	newTweet := TweetTmpl{
-		UserName:  tweet.UserName,
-		Timestamp: newTimeString,
-		Body:      tweet.Body,
-	}
-	return newTweet
-}
-
-// TweetListToTweetTmpl - convert a slice of Tweet into a slice of TweetTmpl type
-func TweetListToTweetTmpl(tweetList []*protocol.Tweet) []TweetTmpl {
-	var newTweetList []TweetTmpl
-
-	for _, t := range tweetList {
-		newTweetList = append(newTweetList, TweetTimeConvert(t))
-	}
-	return newTweetList
->>>>>>> new_timestamp
 }
