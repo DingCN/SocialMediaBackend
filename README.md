@@ -33,6 +33,10 @@ under directory cmd/local/backend/
   
   "web.go" then calls "rpcsend.go" to send rpc to backend server. Backend server receives rpc in "backend.go", it then calls "storage API" to communicate with package storage. 
       
+## Versions
+v1.x: Part 1;  
+v2.x: Part 2;  
+v3.x: Part 3 (implementing);   
 ## Note
 TODO test: threadsafe
 
