@@ -15,17 +15,17 @@ run
 ~~~~
 go run web_test.go
 ~~~~
-under directory cmd/local/web/
+under directory cmd/local/web/  
 run
 ~~~~
 go run backend_test.go
 ~~~~
-under directory cmd/local/backend/
+under directory cmd/local/backend/  
 run
 ~~~~
 go run storage_test.go
 ~~~~
-under directory cmd/local/backend/
+under directory cmd/local/backend/  
 
 
 ## Structure
