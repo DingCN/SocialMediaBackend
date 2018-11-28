@@ -151,9 +151,9 @@ func (s *backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.
 	return res, nil
 }
 
-// We store the following list and follower list of a user in map[string]bool
-// ConvertFollowListToProtoFollowList convert a map struct of follower list to a []string struct
-// Both Following and Follower list
+// We store the following list and follower list of a user in map[string]bool to ensure O(1) for checking if user is following another user
+// ConvertFollowListToProtoFollowList convert a map struct of follower list to a []string struct for displaying by front-end
+// This function converts both Following list and Follower list
 func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool) ([]string, error) {
 	res := []string{}
 	for user, _ := range followList {
@@ -162,7 +162,7 @@ func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool)
 	return res, nil
 }
 
-// OPGetRandomTweet()
+// MomentRandomFeedsRPC is used for Moments feature
 func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
 
 	reply := &protocol.MomentRandomFeedsReply{}
@@ -178,6 +178,7 @@ func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentR
 
 }
 
+// CheckIfFollowingRPC checks if user is following a target user
 func (s *backend) CheckIfFollowingRPC(ctx context.Context, in *protocol.CheckIfFollowingRequest) (*protocol.CheckIfFollowingReply, error) {
 	username := in.Username
 	targetname := in.Targetname
