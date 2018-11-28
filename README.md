@@ -3,24 +3,28 @@ run
 ~~~~
 go run web.go
 ~~~~
-under directory cmd/local/web/  
+under directory cmd/local/web/    
+
 run
 ~~~~
 go run backend.go
 ~~~~
 under directory cmd/local/backend/  
+
 web server runs at localhost:8080 by default, backend server runs at localhost:50051 by default
 ## Test
 run
 ~~~~
 go run web_test.go
 ~~~~
-under directory cmd/local/web/  
+under directory cmd/local/web/    
+
 run
 ~~~~
 go run backend_test.go
 ~~~~
-under directory cmd/local/backend/  
+under directory cmd/local/backend/   
+
 run
 ~~~~
 go run storage_test.go
