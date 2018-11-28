@@ -3,7 +3,7 @@ run
 ~~~~
 go run web.go
 ~~~~
-under directory cmd/local/web/
+under directory cmd/local/web/  
 run
 ~~~~
 go run backend.go
