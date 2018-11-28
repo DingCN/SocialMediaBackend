@@ -4,13 +4,18 @@ run
 go run web.go
 ~~~~
 under directory cmd/local/web/
+run
+~~~~
+go run backend.go
+~~~~
+under directory cmd/local/backend/
   
-server runs at localhost:8080 by default
+web server runs at localhost:8080 by default, backend server runs at localhost:50051 by default, 
 
 ## Structure
   When a request comes, it is handled by "pkg/web/web.go";
   
-  "web.go" then calls "operator.go" to get or modify our data structures, which are stored in "model.go".
+  "web.go" then calls "rpcsend.go" to send rpc to backend server. Backend server receives rpc in "backend.go", it then calls "storage API" to communicate with package storage. 
       
 ## Note
 Server uses memory as storage in Part 1, but out of memory is not handled.  
