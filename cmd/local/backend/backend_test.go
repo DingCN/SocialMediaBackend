@@ -21,7 +21,7 @@ import (
 var webSrv = &web.Web{}
 
 func startBackend() {
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", ":50051") // TODO add to config
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
