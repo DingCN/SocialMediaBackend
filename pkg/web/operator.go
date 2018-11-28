@@ -1,6 +1,8 @@
 package web
 
 import (
+	"time"
+
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 	"github.com/DingCN/SocialMediaBackend/pkg/twitterTimestamp"
 )
@@ -9,7 +11,7 @@ import (
 // correct timestamp display format
 func TweetTimeConvert(tweet *protocol.Tweet) TweetTmpl {
 	newTime := twitterTimestamp.Timestamp(tweet.Timestamp)
-	newTimeString := newTime.Add(time.Hour * (-5).Format("2006-01-02 15:04:05")
+	newTimeString := newTime.Add(time.Hour * (-5)).Format("2006-01-02 15:04:05")
 	newTweet := TweetTmpl{
 		UserName:  tweet.UserName,
 		Timestamp: newTimeString,
