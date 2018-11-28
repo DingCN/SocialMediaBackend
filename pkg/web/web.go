@@ -426,9 +426,12 @@ func (web *Web) MomentRandomFeeds(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+
 	t, err := template.ParseFiles("frontend/moments.html")
 	if err != nil {
 		panic(err)
 	}
-	t.Execute(w, reply.TweetList)
+
+	newTweetList := TweetListToTweetTmpl(reply.TweetList)
+	t.Execute(w, newTweetList)
 }
