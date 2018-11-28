@@ -102,29 +102,6 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 	return &reply, err
 }
 
-// OPGetFollowingTweets(pUser.UserName)
-// func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {
-// 	username := in.GetUsername()
-// 	password := in.GetPassword()
-// 	reply := protocol.GetFollowingTweetsReply{}
-// 	reply.Username = username
-
-// 	pUser, err := s.Storage.GetUser(username)
-// 	if err != nil {
-
-// 		reply.Success = false
-// 		return &reply, err
-// 	}
-// 	if pUser.Password != password {
-// 		err := errorcode.ErrIncorrectPassword
-// 		reply.Success = false
-// 		return &reply, err
-// 	}
-
-// 	reply.Success = true
-// 	return &reply, nil
-// }
-
 func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {
 	username := in.GetUsername()
 	reply := protocol.GetFollowingTweetsReply{}
@@ -174,6 +151,8 @@ func (s *backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.
 	return res, nil
 }
 
+// We store the following list and follower list of a user in map[string]bool
+// ConvertFollowListToProtoFollowList convert a map struct of follower list to a []string struct
 // Both Following and Follower list
 func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool) ([]string, error) {
 	res := []string{}

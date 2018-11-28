@@ -21,6 +21,8 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+// run whole file to test, testing single test case won't work since we cannot start server in every test function
+
 var addr = "//127.0.0.1:8080"
 
 const (

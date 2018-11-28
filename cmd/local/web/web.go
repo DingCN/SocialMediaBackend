@@ -6,6 +6,7 @@ import (
 	"github.com/DingCN/SocialMediaBackend/pkg/web"
 )
 
+// Start web service server
 func main() {
 	cfg := &web.Config{
 		Addr: os.Getenv("HOST"),

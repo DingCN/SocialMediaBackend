@@ -16,7 +16,7 @@ import (
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
-// run whole file tests only, testing single test cases won't work since we are testing servers
+// run whole file to test, testing single test case won't work since we cannot start server in every test function
 
 var webSrv = &web.Web{}
 
@@ -49,6 +49,8 @@ func TestStartServer(t *testing.T) {
 	// Starting Backend
 	go startBackend()
 }
+
+// TestSignupRPC tests a successful signup, and then signup again to see if "Username taken error" is triggered correctly
 func TestSignupRPC(t *testing.T) {
 	//calling RPC
 	_, err := webSrv.SignupRPCSend("user1", "password1")
@@ -61,6 +63,8 @@ func TestSignupRPC(t *testing.T) {
 	}
 }
 
+// TestMomentsRPC tests the moments feature
+// Moments:
 // When a user registers, he isn't following any other users.
 // We provide a moment page so that it can get the newest posts even he is not following their owner
 func TestMomentsRPC(t *testing.T) {
@@ -95,6 +99,7 @@ func TestMomentsRPC(t *testing.T) {
 	}
 }
 
+// TestGetFollowingTweetsRPC tests if a user only gets tweets from those users he/she follows
 func TestGetFollowingTweetsRPC(t *testing.T) {
 	webSrv.SignupRPCSend("TestGetFollowingTweetsRPC_Alice", "TestGetFollowingTweetsRPC_Alice")
 	webSrv.SignupRPCSend("TestGetFollowingTweetsRPC_Bob", "TestGetFollowingTweetsRPC_Bob")
@@ -130,6 +135,8 @@ func TestGetFollowingTweetsRPC(t *testing.T) {
 		t.Fatalf("TestGetFollowingTweetsRPC incorrect")
 	}
 }
+
+// TestUserProfileRPC tests the userprofile page, in which number of following, number of follower, feeds is displayed to user
 func TestUserProfileRPC(t *testing.T) {
 	webSrv.SignupRPCSend("TestUserProfileRPCAlice", "TestUserProfileRPCAlice")
 	webSrv.SignupRPCSend("TestUserProfileRPC_Bob", "TestUserProfileRPC_Bob")
