@@ -1,6 +1,6 @@
-package StorageRaft
+package storageraft
 
-import "github.com/etcd/raft"
+import "go.etcd.io/etcd/raft"
 
 func startCluster() {
 	storage := raft.NewMemoryStorage()
