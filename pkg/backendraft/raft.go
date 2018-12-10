@@ -31,10 +31,10 @@ import (
 	"go.etcd.io/etcd/pkg/types"
 	"go.etcd.io/etcd/raft"
 	"go.etcd.io/etcd/raft/raftpb"
+	"go.uber.org/zap"
+
 	"go.etcd.io/etcd/wal"
 	"go.etcd.io/etcd/wal/walpb"
-
-	"go.uber.org/zap"
 )
 
 // A key-value stream backed by raft

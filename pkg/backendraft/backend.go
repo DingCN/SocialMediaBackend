@@ -32,7 +32,7 @@ func New() (*backend, error) {
 	// raft
 	cluster := flag.String("cluster", "http://127.0.0.1:9021", "comma separated cluster peers")
 	id := flag.Int("id", 1, "node ID")
-	kvport := flag.Int("port", 9121, "key-value server port")
+	//kvport := flag.Int("port", 9121, "key-value server port")
 	join := flag.Bool("join", false, "join an existing cluster")
 	flag.Parse()
 	proposeC := make(chan string)
@@ -64,18 +64,15 @@ func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*p
 		username string
 		password string
 	}
-	byte, _ := json.Marshal(st{username, password})
-	ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], byte)
-	// ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], json.Marshal(st{username, password}))
 
-	// ok, err := s.kvStore.kvStore.AddUser(username, password)
+	byte, _ := json.Marshal(st{username, password})
+	s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], byte)
 
 	reply := protocol.SignupReply{}
 	reply.Username = username
-	// reply.Success = true
-	// return &reply, nil
-	reply.Success = ok
-	return &reply, err
+
+	reply.Success = true
+	return &reply, nil
 }
 
 func (s *backend) LoginRPC(ctx context.Context, in *protocol.LoginRequest) (*protocol.LoginReply, error) {
@@ -106,9 +103,16 @@ func (s *backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 	post := in.GetPost()
 	reply := protocol.AddTweetReply{}
 	reply.Username = username
-	ok, err := s.kvStore.kvStore.AddTweet(username, post)
-	reply.Success = ok
-	return &reply, err
+	type st struct {
+		username string
+		post     string
+	}
+	byte, _ := json.Marshal(st{username, post})
+	s.kvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
+	reply.Success = true
+	return &reply, nil
+	// reply.Success = ok
+	// return &reply, err
 }
 
 // OPFollowUnFollow(username, target[0])
@@ -123,11 +127,11 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 		targetname string
 	}
 	byte, _ := json.Marshal(st{username, targetname})
-	ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
+	s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
 	// ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
 	// ok, err := s.kvStore.kvStore.FollowUnFollow(username, targetname)
-	reply.Success = ok
-	return &reply, err
+	reply.Success = true
+	return &reply, nil
 }
 
 func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {

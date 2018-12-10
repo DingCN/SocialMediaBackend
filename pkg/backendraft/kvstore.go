@@ -169,6 +169,17 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 
 			s.kvStore.FollowUnFollow(store.username, store.targetname)
 			s.mu.Unlock()
+		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["AddTweetRPC"] {
+			type st struct {
+				username string
+				post     string
+			}
+			var store st
+			json.Unmarshal(dataKv.data, &store)
+			s.mu.Lock()
+
+			s.kvStore.FollowUnFollow(store.username, store.post)
+			s.mu.Unlock()
 		} else {
 			// s.mu.Lock()
 			// s.kvStore[dataKv.Key] = dataKv.Val
