@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"log"
 	"net"
 
@@ -30,4 +31,10 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+
+	conn, err := net.Dial("tcp", "localhost:9021")
+	if err != nil {
+		log.Fatal("Connection error", err)
+	}
+	backend.RaftEncoder = gob.NewEncoder(conn)
 }

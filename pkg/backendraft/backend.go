@@ -4,13 +4,10 @@ package backendraft
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"log"
-	"strings"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
-	"go.etcd.io/etcd/raft/raftpb"
 )
 
 const (
@@ -21,7 +18,7 @@ const (
 
 // Backend server
 type backend struct {
-	kvStore kvstore
+	Storage storage
 	//srv *http.Server
 	// //client handle when comm with backend
 	// c protocol.TwitterRPCClient
@@ -29,33 +26,17 @@ type backend struct {
 
 // New config
 func New() (*backend, error) {
-	// raft
-	cluster := flag.String("cluster", "http://127.0.0.1:9021", "comma separated cluster peers")
-	id := flag.Int("id", 1, "node ID")
-	//kvport := flag.Int("port", 9121, "key-value server port")
-	join := flag.Bool("join", false, "join an existing cluster")
-	flag.Parse()
-	proposeC := make(chan string)
-	defer close(proposeC)
-	confChangeC := make(chan raftpb.ConfChange)
-	defer close(confChangeC)
-	// raft provides a commit stream for the proposals from the http api
-	var kvs *kvstore
-	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
-	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
-	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
-	return &backend{*kvs}, nil
+	return &backend{
+		Storage: storage{
+			UserList:         userlist{Users: map[string]*User{}},
+			CentralTweetList: centraltweetlist{Tweets: []*Tweet{}},
+		},
+
+		// srv: &http.Server{
+		// 	Addr: cfg.Addr,
+		// },
+	}, nil
 }
-
-// func (s *backend) Start() error {
-
-// 	pb.RegisterTwitterRPCServer(s, &backend{})
-// 	// Register reflection service on gRPC server.
-// 	reflection.Register(s)
-// 	if err := s.Serve(lis); err != nil {
-// 		log.Fatalf("failed to serve: %v", err)
-// 	}
-// }
 
 func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*protocol.SignupReply, error) {
 	username := in.GetUsername()

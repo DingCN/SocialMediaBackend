@@ -3,6 +3,8 @@ package backend
 
 import (
 	"context"
+	"encoding/gob"
+	"encoding/json"
 	"log"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
@@ -17,7 +19,8 @@ const (
 
 // Backend server
 type backend struct {
-	Storage storage
+	Storage     storage
+	RaftEncoder *gob.Encoder
 	//srv *http.Server
 	// //client handle when comm with backend
 	// c protocol.TwitterRPCClient
@@ -46,12 +49,22 @@ func New() (*backend, error) {
 // 		log.Fatalf("failed to serve: %v", err)
 // 	}
 // }
+type Message struct {
+	RPCfunctionNum int32
+	data           []byte
+}
 
 func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*protocol.SignupReply, error) {
 	username := in.GetUsername()
 	password := in.GetPassword()
 	ok, err := s.Storage.AddUser(username, password)
-
+	type st struct {
+		username string
+		password string
+	}
+	var store st
+	message := &Message{protocol.Functions_FunctionName_value["SignupRPC"], json.Marshal(store)}
+	encoder.Encode(p)
 	reply := protocol.SignupReply{}
 	reply.Username = username
 	reply.Success = ok
