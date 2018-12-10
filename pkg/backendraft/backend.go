@@ -65,17 +65,17 @@ func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*p
 		password string
 	}
 	byte, _ := json.Marshal(st{username, password})
-	s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], byte)
+	ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], byte)
 	// ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], json.Marshal(st{username, password}))
 
 	// ok, err := s.kvStore.kvStore.AddUser(username, password)
 
 	reply := protocol.SignupReply{}
 	reply.Username = username
-	reply.Success = true
-	return &reply, nil
-	// reply.Success = ok
-	// return &reply, err
+	// reply.Success = true
+	// return &reply, nil
+	reply.Success = ok
+	return &reply, err
 }
 
 func (s *backend) LoginRPC(ctx context.Context, in *protocol.LoginRequest) (*protocol.LoginReply, error) {
@@ -122,8 +122,9 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 		username   string
 		targetname string
 	}
-
-	ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], json.Marshal(st{username, targetname}))
+	byte, _ := json.Marshal(st{username, targetname})
+	ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
+	// ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
 	// ok, err := s.kvStore.kvStore.FollowUnFollow(username, targetname)
 	reply.Success = ok
 	return &reply, err

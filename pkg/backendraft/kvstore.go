@@ -156,11 +156,18 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			json.Unmarshal(dataKv.data, &store)
 			s.mu.Lock()
 
-			s.kvStore.FollowUnFollow(store.username, store.password)
+			s.kvStore.AddUser(store.username, store.password)
 			s.mu.Unlock()
 		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["FollowUnFollowRPC"] {
+			type st struct {
+				username   string
+				targetname string
+			}
+			var store st
+			json.Unmarshal(dataKv.data, &store)
 			s.mu.Lock()
-			s.kvStore.FollowUnFollow(dataKv.data)
+
+			s.kvStore.FollowUnFollow(store.username, store.targetname)
 			s.mu.Unlock()
 		} else {
 			// s.mu.Lock()
