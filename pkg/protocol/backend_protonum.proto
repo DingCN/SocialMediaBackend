@@ -1,0 +1,15 @@
+syntax = "proto3";
+package protocol;
+
+message Functions {
+    enum FunctionName {
+        SignupRPC = 0;
+        LoginRPC = 1;
+        FollowUnFollowRPC = 2;
+        AddTweetRPC = 3;
+        GetFollowingTweetsRPC = 4;
+        GetUserProfileRPC = 5;
+        MomentRandomFeedsRPC = 6;
+        CheckIfFollowingRPC = 7;
+    }
+}
