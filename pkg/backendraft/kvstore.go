@@ -40,7 +40,7 @@ type kv struct {
 }
 
 func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <-chan *string, errorC <-chan error) *kvstore {
-	s := &kvstore{proposeC: proposeC, kvStore: storage{}, snapshotter: snapshotter}
+	s := &kvstore{proposeC: proposeC, kvStore: storage{userlist{}, centraltweetlist{}}, snapshotter: snapshotter}
 	// replay log into key-value map
 	s.readCommits(commitC, errorC)
 	// read commits from raft into kvStore map until error
@@ -146,6 +146,9 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 		dec := gob.NewDecoder(bytes.NewBufferString(*data))
 		if err := dec.Decode(&dataKv); err != nil {
 			log.Fatalf("raftexample: could not decode message (%v)", err)
+		}
+		if len(dataKv.data) == 0 {
+			continue
 		}
 		if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["SignupRPC"] {
 			type st struct {

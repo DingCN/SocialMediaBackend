@@ -36,9 +36,9 @@ func New() (*backend, error) {
 	join := flag.Bool("join", false, "join an existing cluster")
 	flag.Parse()
 	proposeC := make(chan string)
-	defer close(proposeC)
+	//defer close(proposeC)
 	confChangeC := make(chan raftpb.ConfChange)
-	defer close(confChangeC)
+	//defer close(confChangeC)
 	// raft provides a commit stream for the proposals from the http api
 	var kvs *kvstore
 	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
@@ -61,8 +61,8 @@ func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*p
 	username := in.GetUsername()
 	password := in.GetPassword()
 	type st struct {
-		username string
-		password string
+		Username string
+		Password string
 	}
 
 	byte, _ := json.Marshal(st{username, password})
@@ -104,8 +104,8 @@ func (s *backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 	reply := protocol.AddTweetReply{}
 	reply.Username = username
 	type st struct {
-		username string
-		post     string
+		Username string
+		Post     string
 	}
 	byte, _ := json.Marshal(st{username, post})
 	s.kvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
@@ -123,8 +123,8 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 	reply.Username = username
 	//Propose(protonum, {username, targetname})
 	type st struct {
-		username   string
-		targetname string
+		Username   string
+		Targetname string
 	}
 	byte, _ := json.Marshal(st{username, targetname})
 	s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
@@ -149,6 +149,9 @@ func (s *backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserPro
 	reply := &protocol.GetUserProfileReply{}
 	reply.Username = username
 	pUser, err := s.kvStore.GetUserProfile(username)
+	if err != nil {
+		return nil, err
+	}
 	reply.Username = pUser.UserName
 	reply.TweetList, err = s.ConvertTweetListToProtoTweetList(pUser.TweetList)
 	if err != nil {

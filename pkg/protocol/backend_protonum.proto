@@ -3,13 +3,18 @@ package protocol;
 
 message Functions {
     enum FunctionName {
-        SignupRPC = 0;
-        LoginRPC = 1;
-        FollowUnFollowRPC = 2;
-        AddTweetRPC = 3;
-        GetFollowingTweetsRPC = 4;
-        GetUserProfileRPC = 5;
-        MomentRandomFeedsRPC = 6;
-        CheckIfFollowingRPC = 7;
+        reserve0 = 0;
+        reserve1 = 1;
+        reserve2 = 2;
+        reserve3 = 3;
+        reserve4 = 4;
+        SignupRPC = 5;
+        LoginRPC = 6;
+        FollowUnFollowRPC = 7;
+        AddTweetRPC = 8;
+        GetFollowingTweetsRPC = 9;
+        GetUserProfileRPC = 10;
+        MomentRandomFeedsRPC = 11;
+        CheckIfFollowingRPC = 12;
     }
 }
