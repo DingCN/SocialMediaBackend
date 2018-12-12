@@ -14,19 +14,17 @@ import (
 	pb "github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
-const (
-	port = ":50051"
-)
+// const (
+// 	port = ":50051"
+// )
 
 // Start backend server
 func main() {
-
-	// backend
-	lis, err := net.Listen("tcp", port)
+	backend, _ := backendraft.New()
+	lis, err := net.Listen("tcp", backend.Addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	backend, _ := backendraft.New()
 	s := grpc.NewServer()
 	pb.RegisterTwitterRPCServer(s, backend)
 	// Register reflection service on gRPC server.

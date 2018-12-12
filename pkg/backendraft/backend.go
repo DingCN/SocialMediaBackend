@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"strings"
 
@@ -21,7 +22,8 @@ const (
 
 // Backend server
 type backend struct {
-	kvStore kvstore
+	Addr    string
+	KvStore kvstore
 	//srv *http.Server
 	// //client handle when comm with backend
 	// c protocol.TwitterRPCClient
@@ -29,12 +31,17 @@ type backend struct {
 
 // New config
 func New() (*backend, error) {
-	// raft
-	cluster := flag.String("cluster", "http://127.0.0.1:9021", "comma separated cluster peers")
+	// config
+	cluster := flag.String("cluster", "http://127.0.0.1:12379", "comma separated cluster peers")
 	id := flag.Int("id", 1, "node ID")
-	//kvport := flag.Int("port", 9121, "key-value server port")
+	port := flag.String("port", "50051", "key-value server port")
 	join := flag.Bool("join", false, "join an existing cluster")
 	flag.Parse()
+
+	// backend
+	addr := ":" + (*port)
+	fmt.Println(addr)
+	// raft
 	proposeC := make(chan string)
 	//defer close(proposeC)
 	confChangeC := make(chan raftpb.ConfChange)
@@ -44,7 +51,7 @@ func New() (*backend, error) {
 	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
 	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
 	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
-	return &backend{*kvs}, nil
+	return &backend{addr, *kvs}, nil
 }
 
 // func (s *backend) Start() error {
@@ -64,9 +71,17 @@ func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*p
 		Username string
 		Password string
 	}
+	_, err := s.KvStore.GetUserProfile(username)
+	if err != errorcode.ErrUserNotExist {
+		reply := protocol.SignupReply{}
+		reply.Username = username
+
+		reply.Success = false
+		return &reply, errorcode.ErrUsernameTaken
+	}
 
 	byte, _ := json.Marshal(st{username, password})
-	s.kvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], byte)
+	s.KvStore.Propose(protocol.Functions_FunctionName_value["SignupRPC"], byte)
 
 	reply := protocol.SignupReply{}
 	reply.Username = username
@@ -81,7 +96,7 @@ func (s *backend) LoginRPC(ctx context.Context, in *protocol.LoginRequest) (*pro
 	reply := protocol.LoginReply{}
 	reply.Username = username
 
-	pUser, err := s.kvStore.GetUser(username)
+	pUser, err := s.KvStore.GetUser(username)
 	if err != nil {
 
 		reply.Success = false
@@ -108,7 +123,7 @@ func (s *backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 		Post     string
 	}
 	byte, _ := json.Marshal(st{username, post})
-	s.kvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
+	s.KvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
 	reply.Success = true
 	return &reply, nil
 	// reply.Success = ok
@@ -127,7 +142,7 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 		Targetname string
 	}
 	byte, _ := json.Marshal(st{username, targetname})
-	s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
+	s.KvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
 	// ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
 	// ok, err := s.kvStore.kvStore.FollowUnFollow(username, targetname)
 	reply.Success = true
@@ -138,7 +153,7 @@ func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFol
 	username := in.GetUsername()
 	reply := protocol.GetFollowingTweetsReply{}
 	reply.Username = username
-	tweets, err := s.kvStore.GetFollowingTweets(username)
+	tweets, err := s.KvStore.GetFollowingTweets(username)
 	reply.Tweet, err = s.ConvertTweetListToProtoTweetList(tweets)
 	reply.Success = true
 	return &reply, err
@@ -148,7 +163,7 @@ func (s *backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserPro
 	username := in.GetUsername()
 	reply := &protocol.GetUserProfileReply{}
 	reply.Username = username
-	pUser, err := s.kvStore.GetUserProfile(username)
+	pUser, err := s.KvStore.GetUserProfile(username)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +216,7 @@ func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool)
 func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
 
 	reply := &protocol.MomentRandomFeedsReply{}
-	tweetlist := s.kvStore.MomentRandomFeeds()
+	tweetlist := s.KvStore.MomentRandomFeeds()
 	protoTweetList, err := s.ConvertTweetListToProtoTweetList(tweetlist)
 	if err != nil {
 		log.Println(err)
@@ -218,6 +233,6 @@ func (s *backend) CheckIfFollowingRPC(ctx context.Context, in *protocol.CheckIfF
 	username := in.Username
 	targetname := in.Targetname
 	reply := &protocol.CheckIfFollowingReply{}
-	reply.IsFollowing, _ = s.kvStore.CheckIfFollowing(username, targetname)
+	reply.IsFollowing, _ = s.KvStore.CheckIfFollowing(username, targetname)
 	return reply, nil
 }

@@ -37,11 +37,17 @@ type kvstore struct {
 
 type kv struct {
 	RPCfunctionNum int32
-	data           []byte
+	Data           []byte
 }
 
 func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <-chan *string, errorC <-chan error) *kvstore {
-	s := &kvstore{proposeC: proposeC, kvStore: storage{userlist{}, centraltweetlist{}}, snapshotter: snapshotter}
+	s := &kvstore{proposeC: proposeC,
+		kvStore: storage{
+			UserList:         userlist{Users: map[string]*User{}},
+			CentralTweetList: centraltweetlist{Tweets: []*Tweet{}},
+		},
+		snapshotter: snapshotter}
+
 	// replay log into key-value map
 	s.readCommits(commitC, errorC)
 	// read commits from raft into kvStore map until error
@@ -79,12 +85,9 @@ func (s *kvstore) GetTweetByUsername(username string) ([]Tweet, error) {
 	return tweetlist, nil
 }
 
-func (s *kvstore) GetRandomTweet() ([]Tweet, error) {
-	tweetlist, err := s.kvStore.GetRandomTweet()
-	if err != nil {
-		return nil, err
-	}
-	return tweetlist, nil
+func (s *kvstore) MomentRandomFeeds() []Tweet {
+	tweets := s.kvStore.MomentRandomFeeds()
+	return tweets
 }
 
 func (s *kvstore) GetFollowingTweets(username string) ([]Tweet, error) {
@@ -111,22 +114,12 @@ func (s *kvstore) CheckIfFollowing(username string, targetname string) (bool, er
 	return success, nil
 }
 
-func (s *kvstore) MomentRandomFeeds() []Tweet {
-	tweets := s.kvStore.MomentRandomFeeds()
-	return tweets
-}
-
 func (s *kvstore) Propose(RPCfunctionNum int32, data []byte) {
 	var buf bytes.Buffer
-	type st struct {
-		username       string
-		RPCfunctionNum int32
-		password       string
-	}
-	if err := gob.NewEncoder(&buf).Encode(st{"username", RPCfunctionNum, "password"}); err != nil {
+	if err := gob.NewEncoder(&buf).Encode(kv{RPCfunctionNum, data}); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("buf: %+v", buf)
+	fmt.Println("buf: %+v", buf)
 	s.proposeC <- buf.String()
 }
 
@@ -148,16 +141,11 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			}
 			continue
 		}
-		fmt.Printf("data: ", data)
+		fmt.Println("data: %+v", data)
 		var dataKv kv
-		type st struct {
-			username       string
-			RPCfunctionNum int32
-			password       string
-		}
-		var tmp st
 		dec := gob.NewDecoder(bytes.NewBufferString(*data))
-		if err := dec.Decode(&tmp); err != nil {
+		if err := dec.Decode(&dataKv); err != nil {
+			continue
 			log.Fatalf("raftexample: could not decode message (%v)", err)
 		}
 		// if len(dataKv.data) == 0 {
@@ -165,36 +153,36 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 		// }
 		if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["SignupRPC"] {
 			type st struct {
-				username string
-				password string
+				Username string
+				Password string
 			}
 			var store st
-			json.Unmarshal(dataKv.data, &store)
+			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
 
-			s.kvStore.AddUser(store.username, store.password)
+			s.kvStore.AddUser(store.Username, store.Password)
 			s.mu.Unlock()
 		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["FollowUnFollowRPC"] {
 			type st struct {
-				username   string
-				targetname string
+				Username   string
+				Targetname string
 			}
 			var store st
-			json.Unmarshal(dataKv.data, &store)
+			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
 
-			s.kvStore.FollowUnFollow(store.username, store.targetname)
+			s.kvStore.FollowUnFollow(store.Username, store.Targetname)
 			s.mu.Unlock()
 		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["AddTweetRPC"] {
 			type st struct {
-				username string
-				post     string
+				Username string
+				Post     string
 			}
 			var store st
-			json.Unmarshal(dataKv.data, &store)
+			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
 
-			s.kvStore.FollowUnFollow(store.username, store.post)
+			s.kvStore.AddTweet(store.Username, store.Post)
 			s.mu.Unlock()
 		} else {
 			// s.mu.Lock()

@@ -35,12 +35,14 @@ var (
 	ErrUsernameTaken     = status.New(codes.FailedPrecondition, "Storage: ErrUsernameTaken").Err()
 	ErrUserNotExist      = status.New(codes.FailedPrecondition, "Storage: User does not exist").Err()
 	ErrIncorrectPassword = status.New(codes.FailedPrecondition, "Module: ErrIncorrectPassword").Err()
+	ErrRPCConnectionLost = status.New(codes.FailedPrecondition, "Module: ErrRPCConnectionLost").Err()
 	errStringToError     = map[string]error{
 		ErrorDesc(ErrInvalidUsername):   ErrInvalidUsername,
 		ErrorDesc(ErrInvalidPassword):   ErrInvalidPassword,
 		ErrorDesc(ErrUsernameTaken):     ErrUsernameTaken,
 		ErrorDesc(ErrUserNotExist):      ErrUserNotExist,
 		ErrorDesc(ErrIncorrectPassword): ErrIncorrectPassword,
+		ErrorDesc(ErrRPCConnectionLost): ErrRPCConnectionLost,
 	}
 )
 

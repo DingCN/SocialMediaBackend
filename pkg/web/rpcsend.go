@@ -2,7 +2,13 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"google.golang.org/grpc/codes"
+
+	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
+	"google.golang.org/grpc/status"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
@@ -27,8 +33,21 @@ func (web *Web) SignupRPCSend(username string, password string) (*protocol.Signu
 	request := protocol.SignupRequest{}
 	request.Username = username
 	request.Password = password
-	reply, err := web.C.SignupRPC(ctx, &request)
-	return reply, err
+	for i, _ := range web.C {
+		fmt.Println(web.C[i])
+		reply, err := web.C[i].SignupRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
+	}
+	return nil, errorcode.ErrRPCConnectionLost
+
 }
 
 func (web *Web) LoginRPCSend(username string, password string) (*protocol.LoginReply, error) {
@@ -37,8 +56,20 @@ func (web *Web) LoginRPCSend(username string, password string) (*protocol.LoginR
 	request := protocol.LoginRequest{}
 	request.Username = username
 	request.Password = password
-	reply, err := web.C.LoginRPC(ctx, &request)
-	return reply, err
+	for i, _ := range web.C {
+		reply, err := web.C[i].LoginRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
+
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }
 
 func (web *Web) AddTweetRPCSend(username string, post string) (*protocol.AddTweetReply, error) {
@@ -47,8 +78,20 @@ func (web *Web) AddTweetRPCSend(username string, post string) (*protocol.AddTwee
 	request := protocol.AddTweetRequest{}
 	request.Username = username
 	request.Post = post
-	reply, err := web.C.AddTweetRPC(ctx, &request)
-	return reply, err
+	for i, _ := range web.C {
+		reply, err := web.C[i].AddTweetRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
+
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }
 
 func (web *Web) FollowUnFollowRPCSend(username string, targetname string) (*protocol.FollowUnFollowReply, error) {
@@ -57,8 +100,20 @@ func (web *Web) FollowUnFollowRPCSend(username string, targetname string) (*prot
 	request := protocol.FollowUnFollowRequest{}
 	request.Username = username
 	request.Targetname = targetname
-	reply, err := web.C.FollowUnFollowRPC(ctx, &request)
-	return reply, err
+	for i, _ := range web.C {
+		reply, err := web.C[i].FollowUnFollowRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
+
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }
 
 func (web *Web) GetFollowingTweetsRPCSend(username string) (*protocol.GetFollowingTweetsReply, error) {
@@ -66,9 +121,20 @@ func (web *Web) GetFollowingTweetsRPCSend(username string) (*protocol.GetFollowi
 	defer cancel()
 	request := protocol.GetFollowingTweetsRequest{}
 	request.Username = username
-	reply, err := web.C.GetFollowingTweetsRPC(ctx, &request)
+	for i, _ := range web.C {
+		reply, err := web.C[i].GetFollowingTweetsRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
 
-	return reply, err
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }
 
 func (web *Web) GetUserProfileRPCSend(username string) (*protocol.GetUserProfileReply, error) {
@@ -76,17 +142,40 @@ func (web *Web) GetUserProfileRPCSend(username string) (*protocol.GetUserProfile
 	defer cancel()
 	request := protocol.GetUserProfileRequest{}
 	request.Username = username
-	reply, err := web.C.GetUserProfileRPC(ctx, &request)
+	for i, _ := range web.C {
+		reply, err := web.C[i].GetUserProfileRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
 
-	return reply, err
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }
 
 func (web *Web) MomentRandomFeedsRPCSend() (*protocol.MomentRandomFeedsReply, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	request := protocol.MomentRandomFeedsRequest{}
-	reply, err := web.C.MomentRandomFeedsRPC(ctx, &request)
-	return reply, err
+	for i, _ := range web.C {
+		reply, err := web.C[i].MomentRandomFeedsRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
+
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }
 
 func (web *Web) CheckIfFollowingRPCSend(username string, targetname string) (*protocol.CheckIfFollowingReply, error) {
@@ -95,6 +184,18 @@ func (web *Web) CheckIfFollowingRPCSend(username string, targetname string) (*pr
 	request := protocol.CheckIfFollowingRequest{}
 	request.Username = username
 	request.Targetname = targetname
-	reply, err := web.C.CheckIfFollowingRPC(ctx, &request)
-	return reply, err
+	for i, _ := range web.C {
+		reply, err := web.C[i].CheckIfFollowingRPC(ctx, &request)
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				switch e.Code() {
+				case codes.Unavailable:
+					continue
+				}
+			}
+		}
+		return reply, err
+
+	}
+	return nil, errorcode.ErrRPCConnectionLost
 }

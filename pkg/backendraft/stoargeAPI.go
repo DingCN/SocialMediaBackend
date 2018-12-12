@@ -68,12 +68,13 @@ func (Storage *storage) AddTweet(username string, post string) (bool, error) {
 	go_time := time.Now()
 	timestamp := *twitterTimestamp.TimestampProto(go_time)
 	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
-	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, &tweet)
 	pUser, ok := Storage.UserList.Users[username]
 	if ok == false {
 		err := errorcode.ErrUserNotExist
 		return false, err
 	}
+	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, &tweet)
+	fmt.Printf("CentralTweetList: %s", Storage.CentralTweetList.Tweets[0])
 	pUser.TweetList = append(pUser.TweetList, tweet)
 	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
 	return true, nil
@@ -86,18 +87,6 @@ func (Storage *storage) GetTweetByUsername(username string) ([]Tweet, error) {
 		return nil, err
 	}
 	return pUser.TweetList, nil
-}
-func (Storage *storage) GetRandomTweet() ([]Tweet, error) {
-	count := 0
-	tweets := []Tweet{}
-	for i := len(Storage.CentralTweetList.Tweets) - 1; i >= 0; i-- {
-		tweets = append(tweets, *Storage.CentralTweetList.Tweets[i])
-		count++
-		if count >= MaxFeedsNum { ///////////////////////////////////////////////////////////////////////TODO add to config
-			return tweets, nil
-		}
-	}
-	return tweets, nil
 }
 
 // GetFollowingTweets - return an array of sorted tweets posted by users in input user's following list

@@ -19,7 +19,7 @@ import (
 type Web struct {
 	Srv *http.Server
 	//client handle when comm with backend
-	C protocol.TwitterRPCClient
+	C []protocol.TwitterRPCClient
 }
 
 // New config
@@ -33,15 +33,17 @@ func New(cfg *Config) (*Web, error) {
 
 // Start server
 func (web *Web) Start() error {
-	backendAddr := "localhost:50051"
-	conn, err := grpc.Dial(backendAddr, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("web and backend did not connect: %v", err)
-		return err
-
+	web.C = []protocol.TwitterRPCClient{}
+	backendAddrs := []string{"localhost:50051", "localhost:50061", "localhost:50071"}
+	for _, addr := range backendAddrs {
+		conn, err := grpc.Dial(addr, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("web and backend did not connect: %v", err)
+			return err
+		}
+		defer conn.Close()
+		web.C = append(web.C, protocol.NewTwitterRPCClient(conn))
 	}
-	defer conn.Close()
-	web.C = protocol.NewTwitterRPCClient(conn)
 
 	// Contact the backend and print out its response.
 
@@ -64,7 +66,7 @@ func (web *Web) Start() error {
 	http.HandleFunc("/FollowOrUnfollow", web.FollowOrUnfollow)
 	//http.HandleFunc("/ListUser", ListUser)
 
-	err = http.ListenAndServe(":8080", nil) // set listen port
+	err := http.ListenAndServe(":8080", nil) // set listen port
 	return err
 }
 
