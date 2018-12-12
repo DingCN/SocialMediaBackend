@@ -129,8 +129,6 @@ func (s *Backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 	fmt.Printf("AddTweetRPC_pUserTweetList length: %d", len(s.KvStore.Store.UserList.Users["asdf"].TweetList))
 
 	return &reply, nil
-	// reply.Success = ok
-	// return &reply, err
 }
 
 // OPFollowUnFollow(username, target[0])
@@ -146,8 +144,6 @@ func (s *Backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 	}
 	byte, _ := json.Marshal(st{username, targetname})
 	s.KvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
-	// ok, err := s.kvStore.Propose(protocol.Functions_FunctionName_value["FollowUnFollowRPC"], byte)
-	// ok, err := s.kvStore.kvStore.FollowUnFollow(username, targetname)
 	reply.Success = true
 	return &reply, nil
 }

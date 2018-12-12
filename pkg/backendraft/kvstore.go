@@ -180,7 +180,6 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			var store st
 			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
-
 			s.Store.AddTweet(store.Username, store.Post)
 			fmt.Printf("readcommitsCentralTweetList length: %d", len(s.Store.CentralTweetList.Tweets))
 			s.mu.Unlock()
@@ -189,7 +188,6 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			// s.kvStore[dataKv.Key] = dataKv.Val
 			// s.mu.Unlock()
 		}
-
 	}
 	if err, ok := <-errorC; ok {
 		log.Fatal(err)
