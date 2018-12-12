@@ -45,4 +45,5 @@ v3.x: Part 3 (implementing);
 TODO test: threadsafe
 
 ## Reference
-  Based on Adam's github code and the [tutorial](astaxie.gitbooks.io/build-web-application-with-golang) 
+  Based on Adam's github code and the [tutorial](astaxie.gitbooks.io/build-web-application-with-golang)  
+  Raftnode based on [etcd's example](https://github.com/etcd-io/etcd/tree/master/contrib/raftexample)
