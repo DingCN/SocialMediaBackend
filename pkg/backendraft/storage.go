@@ -6,7 +6,7 @@ import (
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 )
 
-var MaxFeedsNum int = 20
+var MaxFeedsNum = 20
 
 // var UserList = userlist{Users: map[string]*User{}}
 // var CentralTweetList = centraltweetlist{Tweets: []*Tweet{}}
@@ -48,7 +48,7 @@ type userlist struct {
 }
 
 type centraltweetlist struct {
-	Tweets []Tweet
+	Tweets []*Tweet
 	mutex  sync.Mutex
 }
 

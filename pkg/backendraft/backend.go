@@ -21,7 +21,7 @@ const (
 // server is used to implement helloworld.GreeterServer.
 
 // Backend server
-type backend struct {
+type Backend struct {
 	Addr    string
 	KvStore kvstore
 	//srv *http.Server
@@ -30,7 +30,7 @@ type backend struct {
 }
 
 // New config
-func New() (*backend, error) {
+func New() (*Backend, error) {
 	// config
 	cluster := flag.String("cluster", "http://127.0.0.1:12379", "comma separated cluster peers")
 	id := flag.Int("id", 1, "node ID")
@@ -51,7 +51,7 @@ func New() (*backend, error) {
 	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
 	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
 	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
-	return &backend{addr, *kvs}, nil
+	return &Backend{addr, *kvs}, nil
 }
 
 // func (s *backend) Start() error {
@@ -64,7 +64,7 @@ func New() (*backend, error) {
 // 	}
 // }
 
-func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*protocol.SignupReply, error) {
+func (s *Backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*protocol.SignupReply, error) {
 	username := in.GetUsername()
 	password := in.GetPassword()
 	type st struct {
@@ -90,7 +90,7 @@ func (s *backend) SignupRPC(ctx context.Context, in *protocol.SignupRequest) (*p
 	return &reply, nil
 }
 
-func (s *backend) LoginRPC(ctx context.Context, in *protocol.LoginRequest) (*protocol.LoginReply, error) {
+func (s *Backend) LoginRPC(ctx context.Context, in *protocol.LoginRequest) (*protocol.LoginReply, error) {
 	username := in.GetUsername()
 	password := in.GetPassword()
 	reply := protocol.LoginReply{}
@@ -113,7 +113,7 @@ func (s *backend) LoginRPC(ctx context.Context, in *protocol.LoginRequest) (*pro
 }
 
 // OPAddTweet(username, post)
-func (s *backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest) (*protocol.AddTweetReply, error) {
+func (s *Backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest) (*protocol.AddTweetReply, error) {
 	username := in.GetUsername()
 	post := in.GetPost()
 	reply := protocol.AddTweetReply{}
@@ -125,13 +125,16 @@ func (s *backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 	byte, _ := json.Marshal(st{username, post})
 	s.KvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
 	reply.Success = true
+	fmt.Printf("AddTweetRPC_CentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweets))
+	fmt.Printf("AddTweetRPC_pUserTweetList length: %d", len(s.KvStore.Store.UserList.Users["asdf"].TweetList))
+
 	return &reply, nil
 	// reply.Success = ok
 	// return &reply, err
 }
 
 // OPFollowUnFollow(username, target[0])
-func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFollowRequest) (*protocol.FollowUnFollowReply, error) {
+func (s *Backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFollowRequest) (*protocol.FollowUnFollowReply, error) {
 	username := in.GetUsername()
 	targetname := in.GetTargetname()
 	reply := protocol.FollowUnFollowReply{}
@@ -149,7 +152,7 @@ func (s *backend) FollowUnFollowRPC(ctx context.Context, in *protocol.FollowUnFo
 	return &reply, nil
 }
 
-func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {
+func (s *Backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFollowingTweetsRequest) (*protocol.GetFollowingTweetsReply, error) {
 	username := in.GetUsername()
 	reply := protocol.GetFollowingTweetsReply{}
 	reply.Username = username
@@ -159,7 +162,7 @@ func (s *backend) GetFollowingTweetsRPC(ctx context.Context, in *protocol.GetFol
 	return &reply, err
 }
 
-func (s *backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserProfileRequest) (*protocol.GetUserProfileReply, error) {
+func (s *Backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserProfileRequest) (*protocol.GetUserProfileReply, error) {
 	username := in.GetUsername()
 	reply := &protocol.GetUserProfileReply{}
 	reply.Username = username
@@ -185,7 +188,7 @@ func (s *backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserPro
 
 }
 
-func (s *backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.Tweet, error) {
+func (s *Backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.Tweet, error) {
 	res := []*protocol.Tweet{}
 	for _, tweet := range tweets {
 		stProtoTweet := protocol.Tweet{}
@@ -204,7 +207,7 @@ func (s *backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.
 // We store the following list and follower list of a user in map[string]bool to ensure O(1) for checking if user is following another user
 // ConvertFollowListToProtoFollowList convert a map struct of follower list to a []string struct for displaying by front-end
 // This function converts both Following list and Follower list
-func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool) ([]string, error) {
+func (s *Backend) ConvertFollowListToProtoFollowList(followList map[string]bool) ([]string, error) {
 	res := []string{}
 	for user, _ := range followList {
 		res = append(res, user)
@@ -213,8 +216,8 @@ func (s *backend) ConvertFollowListToProtoFollowList(followList map[string]bool)
 }
 
 // MomentRandomFeedsRPC is used for Moments feature
-func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
-
+func (s *Backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
+	fmt.Printf("CadsfentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweets))
 	reply := &protocol.MomentRandomFeedsReply{}
 	tweetlist := s.KvStore.MomentRandomFeeds()
 	protoTweetList, err := s.ConvertTweetListToProtoTweetList(tweetlist)
@@ -229,7 +232,7 @@ func (s *backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentR
 }
 
 // CheckIfFollowingRPC checks if user is following a target user
-func (s *backend) CheckIfFollowingRPC(ctx context.Context, in *protocol.CheckIfFollowingRequest) (*protocol.CheckIfFollowingReply, error) {
+func (s *Backend) CheckIfFollowingRPC(ctx context.Context, in *protocol.CheckIfFollowingRequest) (*protocol.CheckIfFollowingReply, error) {
 	username := in.Username
 	targetname := in.Targetname
 	reply := &protocol.CheckIfFollowingReply{}

@@ -60,21 +60,36 @@ func (Storage *storage) GetUserProfile(username string) (*User, error) {
 	return pUser, nil
 }
 
+func (Storage *storage) MomentRandomFeeds() []Tweet {
+	var count int
+	tweets := []Tweet{}
+	for i := len(Storage.CentralTweetList.Tweets) - 1; i >= 0; i-- {
+		tweets = append(tweets, *Storage.CentralTweetList.Tweets[i])
+		count++
+		if count >= MaxFeedsNum { ///////////////////////////////////////////////////////////////////////TODO add to config
+			return tweets
+		}
+	}
+	fmt.Printf("MomentFeeds num found: %d", len(Storage.CentralTweetList.Tweets))
+	fmt.Printf("MomentFeeds num returned: %d", len(tweets))
+	return tweets
+}
+
 func (Storage *storage) AddTweet(username string, post string) (bool, error) {
 	Storage.CentralTweetList.mutex.Lock()
 	defer Storage.CentralTweetList.mutex.Unlock()
 	Storage.UserList.mutex.Lock()
 	defer Storage.UserList.mutex.Unlock()
-	go_time := time.Now()
-	timestamp := *twitterTimestamp.TimestampProto(go_time)
+	gotime := time.Now()
+	timestamp := *twitterTimestamp.TimestampProto(gotime)
 	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
 	pUser, ok := Storage.UserList.Users[username]
 	if ok == false {
 		err := errorcode.ErrUserNotExist
 		return false, err
 	}
-	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, tweet)
-	fmt.Printf("CentralTweetList: %s", Storage.CentralTweetList.Tweets[0])
+	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, &tweet)
+	fmt.Printf("CentralTweetList length: %d", len(Storage.CentralTweetList.Tweets))
 	pUser.TweetList = append(pUser.TweetList, tweet)
 	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
 	return true, nil
@@ -180,17 +195,4 @@ func (Storage *storage) CheckIfFollowing(username string, targetname string) (bo
 		return true, nil
 	}
 	return false, nil
-}
-
-func (Storage *storage) MomentRandomFeeds() []Tweet {
-	var count int = 0
-	tweets := []Tweet{}
-	for i := len(Storage.CentralTweetList.Tweets) - 1; i >= 0; i-- {
-		tweets = append(tweets, Storage.CentralTweetList.Tweets[i])
-		count++
-		if count >= 20 { ///////////////////////////////////////////////////////////////////////TODO add to config
-			return tweets
-		}
-	}
-	return tweets
 }

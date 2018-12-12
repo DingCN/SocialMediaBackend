@@ -31,7 +31,7 @@ import (
 type kvstore struct {
 	proposeC    chan<- string // channel for proposing updates
 	mu          sync.RWMutex
-	kvStore     storage // current committed key-value pairs
+	Store       storage // current committed key-value pairs
 	snapshotter *snap.Snapshotter
 }
 
@@ -42,9 +42,9 @@ type kv struct {
 
 func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <-chan *string, errorC <-chan error) *kvstore {
 	s := &kvstore{proposeC: proposeC,
-		kvStore: storage{
+		Store: storage{
 			UserList:         userlist{Users: map[string]*User{}},
-			CentralTweetList: centraltweetlist{Tweets: []Tweet{}},
+			CentralTweetList: centraltweetlist{Tweets: []*Tweet{}},
 		},
 		snapshotter: snapshotter}
 
@@ -63,7 +63,7 @@ func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <
 // }
 
 func (s *kvstore) GetUser(username string) (*User, error) {
-	pUser, err := s.kvStore.GetUser(username)
+	pUser, err := s.Store.GetUser(username)
 	if err != nil {
 		return nil, err
 	}
@@ -71,14 +71,14 @@ func (s *kvstore) GetUser(username string) (*User, error) {
 }
 
 func (s *kvstore) GetUserProfile(username string) (*User, error) {
-	pUser, err := s.kvStore.GetUserProfile(username)
+	pUser, err := s.Store.GetUserProfile(username)
 	if err != nil {
 		return nil, err
 	}
 	return pUser, nil
 }
 func (s *kvstore) GetTweetByUsername(username string) ([]Tweet, error) {
-	tweetlist, err := s.kvStore.GetTweetByUsername(username)
+	tweetlist, err := s.Store.GetTweetByUsername(username)
 	if err != nil {
 		return nil, err
 	}
@@ -86,12 +86,12 @@ func (s *kvstore) GetTweetByUsername(username string) ([]Tweet, error) {
 }
 
 func (s *kvstore) MomentRandomFeeds() []Tweet {
-	tweets := s.kvStore.MomentRandomFeeds()
+	tweets := s.Store.MomentRandomFeeds()
 	return tweets
 }
 
 func (s *kvstore) GetFollowingTweets(username string) ([]Tweet, error) {
-	tweetlist, err := s.kvStore.GetFollowingTweets(username)
+	tweetlist, err := s.Store.GetFollowingTweets(username)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (s *kvstore) GetFollowingTweets(username string) ([]Tweet, error) {
 }
 
 func (s *kvstore) GetAllFollowing(username string) ([]string, error) {
-	followinglist, err := s.kvStore.GetAllFollowing(username)
+	followinglist, err := s.Store.GetAllFollowing(username)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (s *kvstore) GetAllFollowing(username string) ([]string, error) {
 }
 
 func (s *kvstore) CheckIfFollowing(username string, targetname string) (bool, error) {
-	success, err := s.kvStore.CheckIfFollowing(username, targetname)
+	success, err := s.Store.CheckIfFollowing(username, targetname)
 	if err != nil {
 		return false, err
 	}
@@ -159,8 +159,7 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			var store st
 			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
-
-			s.kvStore.AddUser(store.Username, store.Password)
+			s.Store.AddUser(store.Username, store.Password)
 			s.mu.Unlock()
 		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["FollowUnFollowRPC"] {
 			type st struct {
@@ -171,7 +170,7 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
 
-			s.kvStore.FollowUnFollow(store.Username, store.Targetname)
+			s.Store.FollowUnFollow(store.Username, store.Targetname)
 			s.mu.Unlock()
 		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["AddTweetRPC"] {
 			type st struct {
@@ -182,7 +181,8 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
 
-			s.kvStore.AddTweet(store.Username, store.Post)
+			s.Store.AddTweet(store.Username, store.Post)
+			fmt.Printf("readcommitsCentralTweetList length: %d", len(s.Store.CentralTweetList.Tweets))
 			s.mu.Unlock()
 		} else {
 			// s.mu.Lock()
@@ -199,7 +199,7 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 func (s *kvstore) getSnapshot() ([]byte, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return json.Marshal(s.kvStore)
+	return json.Marshal(s.Store)
 }
 
 func (s *kvstore) recoverFromSnapshot(snapshot []byte) error {
@@ -208,7 +208,7 @@ func (s *kvstore) recoverFromSnapshot(snapshot []byte) error {
 		return err
 	}
 	s.mu.Lock()
-	s.kvStore = store
+	s.Store = store
 	s.mu.Unlock()
 	return nil
 }
