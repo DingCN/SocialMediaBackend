@@ -381,6 +381,7 @@ func (web *Web) UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	cookie, _ := r.Cookie("username")
 	username := cookie.Value
+	time.Sleep(1 * time.Second)
 	var isFollowingTarget bool
 	if cookie == nil { // unlogged in
 		isFollowingTarget = false
