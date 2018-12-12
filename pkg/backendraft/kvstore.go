@@ -44,7 +44,7 @@ func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <
 	s := &kvstore{proposeC: proposeC,
 		Store: storage{
 			UserList:         userlist{Users: map[string]*User{}},
-			CentralTweetList: centraltweetlist{Tweets: []*Tweet{}},
+			CentralTweetList: centraltweetlist{Tweets: []Tweet{}},
 		},
 		snapshotter: snapshotter}
 

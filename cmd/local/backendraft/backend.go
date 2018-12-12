@@ -21,6 +21,7 @@ import (
 // Start backend server
 func main() {
 	backend, _ := backendraft.New()
+
 	lis, err := net.Listen("tcp", backend.Addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
