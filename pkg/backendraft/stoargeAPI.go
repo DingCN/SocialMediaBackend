@@ -73,7 +73,7 @@ func (Storage *storage) AddTweet(username string, post string) (bool, error) {
 		err := errorcode.ErrUserNotExist
 		return false, err
 	}
-	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, &tweet)
+	Storage.CentralTweetList.Tweets = append(Storage.CentralTweetList.Tweets, tweet)
 	fmt.Printf("CentralTweetList: %s", Storage.CentralTweetList.Tweets[0])
 	pUser.TweetList = append(pUser.TweetList, tweet)
 	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
@@ -186,7 +186,7 @@ func (Storage *storage) MomentRandomFeeds() []Tweet {
 	var count int = 0
 	tweets := []Tweet{}
 	for i := len(Storage.CentralTweetList.Tweets) - 1; i >= 0; i-- {
-		tweets = append(tweets, *Storage.CentralTweetList.Tweets[i])
+		tweets = append(tweets, Storage.CentralTweetList.Tweets[i])
 		count++
 		if count >= 20 { ///////////////////////////////////////////////////////////////////////TODO add to config
 			return tweets
