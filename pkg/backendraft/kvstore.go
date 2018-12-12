@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 
@@ -117,9 +118,15 @@ func (s *kvstore) MomentRandomFeeds() []Tweet {
 
 func (s *kvstore) Propose(RPCfunctionNum int32, data []byte) {
 	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(kv{RPCfunctionNum, data}); err != nil {
+	type st struct {
+		username       string
+		RPCfunctionNum int32
+		password       string
+	}
+	if err := gob.NewEncoder(&buf).Encode(st{"username", RPCfunctionNum, "password"}); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("buf: %+v", buf)
 	s.proposeC <- buf.String()
 }
 
@@ -141,15 +148,21 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			}
 			continue
 		}
-
+		fmt.Printf("data: ", data)
 		var dataKv kv
+		type st struct {
+			username       string
+			RPCfunctionNum int32
+			password       string
+		}
+		var tmp st
 		dec := gob.NewDecoder(bytes.NewBufferString(*data))
-		if err := dec.Decode(&dataKv); err != nil {
+		if err := dec.Decode(&tmp); err != nil {
 			log.Fatalf("raftexample: could not decode message (%v)", err)
 		}
-		if len(dataKv.data) == 0 {
-			continue
-		}
+		// if len(dataKv.data) == 0 {
+		// 	continue
+		// }
 		if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["SignupRPC"] {
 			type st struct {
 				username string
