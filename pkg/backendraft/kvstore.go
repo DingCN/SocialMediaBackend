@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 
@@ -121,6 +122,9 @@ func (s *kvstore) Propose(RPCfunctionNum int32, data []byte) {
 	}
 	fmt.Println("buf: %+v", buf)
 	s.proposeC <- buf.String()
+	// sleep for operations to complete
+	// TODO change to block
+	time.Sleep(500 * time.Millisecond)
 }
 
 func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
@@ -174,13 +178,15 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			s.mu.Unlock()
 		} else if dataKv.RPCfunctionNum == protocol.Functions_FunctionName_value["AddTweetRPC"] {
 			type st struct {
-				Username string
-				Post     string
+				Username  string
+				Timestamp protocol.Timestamp
+				Post      string
 			}
 			var store st
 			json.Unmarshal(dataKv.Data, &store)
 			s.mu.Lock()
-			s.Store.AddTweet(store.Username, store.Post)
+			fmt.Println("timestamp commited %+v\n", store.Timestamp)
+			s.Store.AddTweet(store.Username, store.Timestamp, store.Post)
 			fmt.Printf("readcommitsCentralTweetList length: %d", len(s.Store.CentralTweetList.Tweets))
 			s.mu.Unlock()
 		} else {

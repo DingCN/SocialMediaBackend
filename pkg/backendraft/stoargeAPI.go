@@ -3,10 +3,10 @@ package backendraft
 import (
 	"fmt"
 	"sort"
-	"time"
+
+	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
-	"github.com/DingCN/SocialMediaBackend/pkg/twitterTimestamp"
 )
 
 // AddUser register a user and his password to database
@@ -75,14 +75,14 @@ func (Storage *storage) MomentRandomFeeds() []Tweet {
 	return tweets
 }
 
-func (Storage *storage) AddTweet(username string, post string) (bool, error) {
+func (Storage *storage) AddTweet(username string, timestamp protocol.Timestamp, post string) (bool, error) {
 
 	Storage.CentralTweetList.mutex.Lock()
 	defer Storage.CentralTweetList.mutex.Unlock()
 	Storage.UserList.mutex.Lock()
 	defer Storage.UserList.mutex.Unlock()
-	gotime := time.Now()
-	timestamp := *twitterTimestamp.TimestampProto(gotime)
+	// gotime := time.Now()
+	// timestamp := *twitterTimestamp.TimestampProto(gotime)
 	tweet := Tweet{UserName: username, Timestamp: timestamp, Body: post}
 	pUser, ok := Storage.UserList.Users[username]
 	if ok == false {

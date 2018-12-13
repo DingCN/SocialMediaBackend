@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
 	"github.com/DingCN/SocialMediaBackend/pkg/protocol"
+	"github.com/DingCN/SocialMediaBackend/pkg/twitterTimestamp"
 	"go.etcd.io/etcd/raft/raftpb"
 )
 
@@ -118,11 +120,15 @@ func (s *Backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 	post := in.GetPost()
 	reply := protocol.AddTweetReply{}
 	reply.Username = username
+	gotime := time.Now()
+	timestamp := *twitterTimestamp.TimestampProto(gotime)
 	type st struct {
-		Username string
-		Post     string
+		Username  string
+		Timestamp protocol.Timestamp
+		Post      string
 	}
-	byte, _ := json.Marshal(st{username, post})
+	fmt.Println("timestamp generated %+v\n", timestamp)
+	byte, _ := json.Marshal(st{username, timestamp, post})
 	s.KvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
 	reply.Success = true
 	// fmt.Printf("AddTweetRPC_CentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweets))
