@@ -125,8 +125,8 @@ func (s *Backend) AddTweetRPC(ctx context.Context, in *protocol.AddTweetRequest)
 	byte, _ := json.Marshal(st{username, post})
 	s.KvStore.Propose(protocol.Functions_FunctionName_value["AddTweetRPC"], byte)
 	reply.Success = true
-	fmt.Printf("AddTweetRPC_CentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweets))
-	fmt.Printf("AddTweetRPC_pUserTweetList length: %d", len(s.KvStore.Store.UserList.Users["asdf"].TweetList))
+	// fmt.Printf("AddTweetRPC_CentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweets))
+	// fmt.Printf("AddTweetRPC_pUserTweetList length: %d", len(s.KvStore.Store.UserList.Users["asdf"].TweetList))
 
 	return &reply, nil
 }
@@ -187,15 +187,22 @@ func (s *Backend) GetUserProfileRPC(ctx context.Context, in *protocol.GetUserPro
 func (s *Backend) ConvertTweetListToProtoTweetList(tweets []Tweet) ([]*protocol.Tweet, error) {
 	res := []*protocol.Tweet{}
 	for _, tweet := range tweets {
-		stProtoTweet := protocol.Tweet{}
-		stProtoTweet.UserName = tweet.UserName
-		stProtoTweet.Body = tweet.Body
-		stProtoTweet.Timestamp = &tweet.Timestamp
+		fmt.Printf("before res:%+v\n", tweet)
+	}
+	for i, _ := range tweets {
+		// stProtoTweet := new(protocol.Tweet)
+		// stProtoTweet.UserName = tweet.UserName
+		// stProtoTweet.Body = tweet.Body
+		// stProtoTweet.Timestamp = &tweet.Timestamp
+
 		// tweetTime := tweet.Timestamp
 		// s := int64(tweetTime.Seconds())     // from 'int'
 		// n := int32(tweetTime.Nanoseconds()) // from 'int'
 		// ts := &timestamp.Timestamp{Seconds: s, Nanos: n}
-		res = append(res, &stProtoTweet)
+		res = append(res, &protocol.Tweet{tweets[i].UserName, &tweets[i].Timestamp, tweets[i].Body})
+	}
+	for _, tweet := range res {
+		fmt.Printf("res:%+v\n", tweet)
 	}
 	return res, nil
 }

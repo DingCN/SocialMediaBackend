@@ -76,6 +76,7 @@ func (Storage *storage) MomentRandomFeeds() []Tweet {
 }
 
 func (Storage *storage) AddTweet(username string, post string) (bool, error) {
+
 	Storage.CentralTweetList.mutex.Lock()
 	defer Storage.CentralTweetList.mutex.Unlock()
 	Storage.UserList.mutex.Lock()
@@ -92,6 +93,9 @@ func (Storage *storage) AddTweet(username string, post string) (bool, error) {
 	fmt.Printf("CentralTweetList length: %d", len(Storage.CentralTweetList.Tweets))
 	pUser.TweetList = append(pUser.TweetList, tweet)
 	fmt.Printf("post: %s successfully created by user:%s\n", post, username)
+	for _, tweet := range pUser.TweetList {
+		fmt.Printf("tweet : %+v\n", tweet)
+	}
 	return true, nil
 }
 
