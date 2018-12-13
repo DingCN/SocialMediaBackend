@@ -48,7 +48,7 @@ type userlist struct {
 }
 
 type centraltweetlist struct {
-	Tweets []Tweet
+	Tweets *[]Tweet
 	mutex  sync.Mutex
 }
 

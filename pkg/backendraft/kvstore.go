@@ -42,10 +42,12 @@ type kv struct {
 }
 
 func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <-chan *string, errorC <-chan error) *kvstore {
+	centrallist := make([]Tweet, 0, 100)
+	// centrallist := centraltweetlist{Tweets: []Tweet{}}
 	s := &kvstore{proposeC: proposeC,
 		Store: storage{
 			UserList:         userlist{Users: map[string]*User{}},
-			CentralTweetList: centraltweetlist{Tweets: []Tweet{}},
+			CentralTweetList: centraltweetlist{Tweets: &centrallist},
 		},
 		snapshotter: snapshotter}
 
@@ -187,7 +189,7 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 			s.mu.Lock()
 			fmt.Println("timestamp commited %+v\n", store.Timestamp)
 			s.Store.AddTweet(store.Username, store.Timestamp, store.Post)
-			fmt.Printf("readcommitsCentralTweetList length: %d", len(s.Store.CentralTweetList.Tweets))
+			fmt.Printf("readcommitsCentralTweetList length: %d", len(*s.Store.CentralTweetList.Tweets))
 			s.mu.Unlock()
 		} else {
 			// s.mu.Lock()
