@@ -226,7 +226,7 @@ func (s *Backend) ConvertFollowListToProtoFollowList(followList map[string]bool)
 
 // MomentRandomFeedsRPC is used for Moments feature
 func (s *Backend) MomentRandomFeedsRPC(ctx context.Context, in *protocol.MomentRandomFeedsRequest) (*protocol.MomentRandomFeedsReply, error) {
-	fmt.Printf("CadsfentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweets))
+	// fmt.Printf("CadsfentralTweetList length: %d", len(s.KvStore.Store.CentralTweetList.Tweetsmap.))
 	reply := &protocol.MomentRandomFeedsReply{}
 	tweetlist := s.KvStore.MomentRandomFeeds()
 	protoTweetList, err := s.ConvertTweetListToProtoTweetList(tweetlist)

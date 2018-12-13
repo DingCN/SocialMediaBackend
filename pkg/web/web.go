@@ -34,7 +34,7 @@ func New(cfg *Config) (*Web, error) {
 // Start server
 func (web *Web) Start() error {
 	web.C = []protocol.TwitterRPCClient{}
-	backendAddrs := []string{"localhost:50051", "localhost:50061", "localhost:50071"}
+	backendAddrs := []string{"localhost:50051", "localhost:50061", "localhost:50071", "localhost:50081", "localhost:50091"}
 	for _, addr := range backendAddrs {
 		conn, err := grpc.Dial(addr, grpc.WithInsecure())
 		if err != nil {

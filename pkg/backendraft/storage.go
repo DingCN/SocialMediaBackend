@@ -46,10 +46,12 @@ type userlist struct {
 	Users map[string]*User
 	mutex sync.Mutex
 }
-
+type TweetsMap struct {
+	TweetList []Tweet
+}
 type centraltweetlist struct {
-	Tweets []Tweet
-	mutex  sync.Mutex
+	Tweetsmap map[string]*TweetsMap
+	mutex     sync.Mutex
 }
 
 // TweetList - List storing all tweets post by all users
