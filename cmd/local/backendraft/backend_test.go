@@ -1,14 +1,19 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/DingCN/SocialMediaBackend/pkg/backend"
+	"github.com/DingCN/SocialMediaBackend/pkg/backendraft"
+
 	"github.com/DingCN/SocialMediaBackend/pkg/errorcode"
 	"github.com/DingCN/SocialMediaBackend/pkg/web"
+	"go.etcd.io/etcd/raft/raftpb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -21,11 +26,31 @@ import (
 var webSrv = &web.Web{}
 
 func startBackend() {
-	lis, err := net.Listen("tcp", ":50051") // TODO add to config
+	cluster := flag.String("cluster", "http://127.0.0.1:12379", "comma separated cluster peers")
+	id := flag.Int("id", 1, "node ID")
+	port := flag.String("port", "50051", "key-value server port")
+	join := flag.Bool("join", false, "join an existing cluster")
+	flag.Parse()
+
+	// backend
+	addr := ":" + (*port)
+	fmt.Println(addr)
+	// raft
+	proposeC := make(chan string)
+	//defer close(proposeC)
+	confChangeC := make(chan raftpb.ConfChange)
+	//defer close(confChangeC)
+	// raft provides a commit stream for the proposals from the http api
+	var kvs *backendraft.Kvstore
+	getSnapshot := func() ([]byte, error) { return kvs.GetSnapshot() }
+	commitC, errorC, snapshotterReady := backendraft.NewRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
+	kvs = backendraft.NewKVStore(<-snapshotterReady, proposeC, commitC, errorC)
+	backend := &backendraft.Backend{addr, *kvs}
+
+	lis, err := net.Listen("tcp", backend.Addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	backend, _ := backend.New()
 	s := grpc.NewServer()
 	protocol.RegisterTwitterRPCServer(s, backend)
 	// Register reflection service on gRPC server.
@@ -35,19 +60,22 @@ func startBackend() {
 	}
 }
 func startWeb() {
-	backendAddr := "localhost:50051"
-	conn, err := grpc.Dial(backendAddr, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("web adn backend did not connect: %v", err)
+	webSrv.C = []protocol.TwitterRPCClient{}
+	backendAddrs := []string{"localhost:50051"}
+	for _, addr := range backendAddrs {
+		conn, _ := grpc.Dial(addr, grpc.WithInsecure())
 
+		defer conn.Close()
+		webSrv.C = append(webSrv.C, protocol.NewTwitterRPCClient(conn))
 	}
-	webSrv.C = protocol.NewTwitterRPCClient(conn)
 }
 func TestStartServer(t *testing.T) {
-	// Starting Web
-	startWeb()
+
 	// Starting Backend
 	go startBackend()
+	time.Sleep(5 * time.Second)
+	// Starting Web
+	startWeb()
 }
 
 // TestSignupRPC tests a successful signup, and then signup again to see if "Username taken error" is triggered correctly

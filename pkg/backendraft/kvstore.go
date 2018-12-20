@@ -29,7 +29,7 @@ import (
 )
 
 // a key-value store backed by raft
-type kvstore struct {
+type Kvstore struct {
 	proposeC    chan<- string // channel for proposing updates
 	mu          sync.RWMutex
 	Store       storage // current committed key-value pairs
@@ -41,10 +41,10 @@ type kv struct {
 	Data           []byte
 }
 
-func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <-chan *string, errorC <-chan error) *kvstore {
+func NewKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <-chan *string, errorC <-chan error) *Kvstore {
 	centrallist := make([]Tweet, 0, 100)
 	// centrallist := centraltweetlist{Tweets: []Tweet{}}
-	s := &kvstore{proposeC: proposeC,
+	s := &Kvstore{proposeC: proposeC,
 		Store: storage{
 			UserList:         userlist{Users: map[string]*User{}},
 			CentralTweetList: centraltweetlist{Tweets: &centrallist},
@@ -52,9 +52,9 @@ func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <
 		snapshotter: snapshotter}
 
 	// replay log into key-value map
-	s.readCommits(commitC, errorC)
+	s.ReadCommits(commitC, errorC)
 	// read commits from raft into kvStore map until error
-	go s.readCommits(commitC, errorC)
+	go s.ReadCommits(commitC, errorC)
 	return s
 }
 
@@ -65,7 +65,7 @@ func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <
 // 	return v, ok
 // }
 
-func (s *kvstore) GetUser(username string) (*User, error) {
+func (s *Kvstore) GetUser(username string) (*User, error) {
 	pUser, err := s.Store.GetUser(username)
 	if err != nil {
 		return nil, err
@@ -73,14 +73,14 @@ func (s *kvstore) GetUser(username string) (*User, error) {
 	return pUser, nil
 }
 
-func (s *kvstore) GetUserProfile(username string) (*User, error) {
+func (s *Kvstore) GetUserProfile(username string) (*User, error) {
 	pUser, err := s.Store.GetUserProfile(username)
 	if err != nil {
 		return nil, err
 	}
 	return pUser, nil
 }
-func (s *kvstore) GetTweetByUsername(username string) ([]Tweet, error) {
+func (s *Kvstore) GetTweetByUsername(username string) ([]Tweet, error) {
 	tweetlist, err := s.Store.GetTweetByUsername(username)
 	if err != nil {
 		return nil, err
@@ -88,12 +88,12 @@ func (s *kvstore) GetTweetByUsername(username string) ([]Tweet, error) {
 	return tweetlist, nil
 }
 
-func (s *kvstore) MomentRandomFeeds() []Tweet {
+func (s *Kvstore) MomentRandomFeeds() []Tweet {
 	tweets := s.Store.MomentRandomFeeds()
 	return tweets
 }
 
-func (s *kvstore) GetFollowingTweets(username string) ([]Tweet, error) {
+func (s *Kvstore) GetFollowingTweets(username string) ([]Tweet, error) {
 	tweetlist, err := s.Store.GetFollowingTweets(username)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (s *kvstore) GetFollowingTweets(username string) ([]Tweet, error) {
 	return tweetlist, nil
 }
 
-func (s *kvstore) GetAllFollowing(username string) ([]string, error) {
+func (s Kvstore) GetAllFollowing(username string) ([]string, error) {
 	followinglist, err := s.Store.GetAllFollowing(username)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *kvstore) GetAllFollowing(username string) ([]string, error) {
 	return followinglist, nil
 }
 
-func (s *kvstore) CheckIfFollowing(username string, targetname string) (bool, error) {
+func (s *Kvstore) CheckIfFollowing(username string, targetname string) (bool, error) {
 	success, err := s.Store.CheckIfFollowing(username, targetname)
 	if err != nil {
 		return false, err
@@ -117,7 +117,7 @@ func (s *kvstore) CheckIfFollowing(username string, targetname string) (bool, er
 	return success, nil
 }
 
-func (s *kvstore) Propose(RPCfunctionNum int32, data []byte) {
+func (s *Kvstore) Propose(RPCfunctionNum int32, data []byte) {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(kv{RPCfunctionNum, data}); err != nil {
 		log.Fatal(err)
@@ -129,7 +129,7 @@ func (s *kvstore) Propose(RPCfunctionNum int32, data []byte) {
 	time.Sleep(500 * time.Millisecond)
 }
 
-func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
+func (s *Kvstore) ReadCommits(commitC <-chan *string, errorC <-chan error) {
 	for data := range commitC {
 		if data == nil {
 			// done replaying log; new data incoming
@@ -142,7 +142,7 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 				log.Panic(err)
 			}
 			log.Printf("loading snapshot at term %d and index %d", snapshot.Metadata.Term, snapshot.Metadata.Index)
-			if err := s.recoverFromSnapshot(snapshot.Data); err != nil {
+			if err := s.RecoverFromSnapshot(snapshot.Data); err != nil {
 				log.Panic(err)
 			}
 			continue
@@ -202,13 +202,13 @@ func (s *kvstore) readCommits(commitC <-chan *string, errorC <-chan error) {
 	}
 }
 
-func (s *kvstore) getSnapshot() ([]byte, error) {
+func (s *Kvstore) GetSnapshot() ([]byte, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return json.Marshal(s.Store)
 }
 
-func (s *kvstore) recoverFromSnapshot(snapshot []byte) error {
+func (s *Kvstore) RecoverFromSnapshot(snapshot []byte) error {
 	var store storage
 	if err := json.Unmarshal(snapshot, &store); err != nil {
 		return err

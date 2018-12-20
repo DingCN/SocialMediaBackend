@@ -25,7 +25,7 @@ const (
 // Backend server
 type Backend struct {
 	Addr    string
-	KvStore kvstore
+	KvStore Kvstore
 	//srv *http.Server
 	// //client handle when comm with backend
 	// c protocol.TwitterRPCClient
@@ -49,10 +49,10 @@ func New() (*Backend, error) {
 	confChangeC := make(chan raftpb.ConfChange)
 	//defer close(confChangeC)
 	// raft provides a commit stream for the proposals from the http api
-	var kvs *kvstore
-	getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() }
-	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
-	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
+	var kvs *Kvstore
+	getSnapshot := func() ([]byte, error) { return kvs.GetSnapshot() }
+	commitC, errorC, snapshotterReady := NewRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
+	kvs = NewKVStore(<-snapshotterReady, proposeC, commitC, errorC)
 	return &Backend{addr, *kvs}, nil
 }
 
