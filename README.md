@@ -1,8 +1,7 @@
 # Use
-
+Access website at localhost:8080
 ## Web Server:
-
-run
+Run
 ~~~~
 go run web.go
 ~~~~
@@ -11,21 +10,20 @@ under directory cmd/local/web/
 
 ## Backend Server:
 
-run
+Run
 ~~~~
 go run backend.go
 ~~~~
 under directory cmd/local/backend/  
 
-or   
-
+<b>OR</b>   
+Run
 ~~~~
 goreman start
 ~~~~
 to start a raft cluster
 
 
-web server runs at localhost:8080 by default, backend server runs at localhost:50051 by default
 # Test
 ## raft test  
 raft cluster has 5 nodes, running on port 50051, 50061, 50071,50081, 50091.  
