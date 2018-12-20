@@ -1,3 +1,7 @@
+# Structure
+![architecture](architecture.png "architecture")
+
+
 # Use
 Access website at localhost:8080
 ## Web Server:
@@ -53,11 +57,6 @@ go run storage_test.go
 ~~~~
 under directory cmd/local/backend/  
 
-
-# Structure
-  When a request comes, it is handled by "pkg/web/web.go";
-  
-  "web.go" then calls "rpcsend.go" to send rpc to backend server. Backend server receives rpc in "backend.go", it then calls "storage API" to communicate with package storage. 
       
 # Versions
 v1.x: Single Server;  
