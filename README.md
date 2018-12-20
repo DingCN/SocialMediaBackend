@@ -57,7 +57,18 @@ go run storage_test.go
 ~~~~
 under directory cmd/local/backend/  
 
-      
+run
+~~~~
+go run storage_test.go
+~~~~
+under directory cmd/local/backendraft/  
+
+run
+~~~~
+go run raft_test.go
+~~~~
+under directory cmd/local/backendraft/  
+
 # Versions
 v1.x: Single Server;  
 v2.x: Separated web server and backend server;  
