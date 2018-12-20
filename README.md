@@ -22,7 +22,7 @@ Run
 ~~~~
 goreman start
 ~~~~
-to start a raft cluster
+under directory cmd/local/backendraft/ to start a raft cluster
 
 
 # Test
