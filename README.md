@@ -67,8 +67,6 @@ v3.x: Raft integrated;
 Web server could send messages to any raft node in the cluster, the messages are then sent to master node, handled by etcd raft.  
        
 
-TODO test: threadsafe
-
 # Reference
   Based on Adam's code and the [tutorial](astaxie.gitbooks.io/build-web-application-with-golang)  
   Raftnode based on [etcd's example](https://github.com/etcd-io/etcd/tree/master/contrib/raftexample)
