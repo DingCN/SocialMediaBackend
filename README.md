@@ -1,29 +1,6 @@
 # Structure
-![architecture](architecture.png "architecture")
-cmd
-|-- web
-| `-- web.go --> build target (the code that actually runs the server)
-web
-|-- web.go
-|-- config.go --> config for web, determines port to bind to, etc.
-|-- cmd --> implementation of build target
-`-- auth
-|-- auth.go --> authentication module, creates a new auth object,
-| starts it, stops it.
-|-- config.go --> token validity duration, hash difficulties, etc.
-|-- errors.go --> errors that auth object can reply with
-|-- *.go --> implement auth; use contexts, generated
-| proto, and storage packages
-|-- *_test.go --> don't forget tests!
-|-- storage
-| |-- storage.go --> storage interface for auth
-| `-- memory
-| |-- config.go
-| `-- memory.go --> *threadsafe* implementation,
-using maps and lists
-`-- authpb
-`-- models.proto --> used to generate all data
-primitives used by auth module
+![architecture](architecture.png "architecture")  
+
 
 # Use
 Access website at localhost:8080
